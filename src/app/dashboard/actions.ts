@@ -196,39 +196,51 @@ export async function updateProperty(propertyId: string, arg1: any, arg2?: any) 
 }
 
 export async function deleteProperty(propertyId: string) {
+    console.log('--- deleteProperty START ---', propertyId)
     const supabase = await createClient()
 
     // Auth Check
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Not authenticated' }
+    if (!user) {
+        console.warn('deleteProperty: Not authenticated')
+        return { error: 'Not authenticated' }
+    }
 
     // Role Check
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    console.log('deleteProperty: User role:', profile?.role)
     if (profile?.role !== 'admin') {
-        // Allow owner to delete? For now, only implementing for Admin as per request workflow.
-        // Actually, owners should probably delete too. Let's stick to Admin request for now.
         return { error: 'Unauthorized' }
     }
 
-    // 1. Delete Related Images
-    await supabase.from('property_images').delete().eq('property_id', propertyId)
+    try {
+        console.log('deleteProperty: Deleting related images...')
+        const { error: err1 } = await supabase.from('property_images').delete().eq('property_id', propertyId)
+        if (err1) console.error('Error deleting images:', err1)
 
-    // 2. Delete Interaction Logs
-    await supabase.from('interaction_logs').delete().eq('property_id', propertyId)
+        console.log('deleteProperty: Deleting interaction logs...')
+        const { error: err2 } = await supabase.from('interaction_logs').delete().eq('property_id', propertyId)
+        if (err2) console.error('Error deleting interaction_logs:', err2)
 
-    // 3. Delete Financial Entries
-    await supabase.from('financial_entries').delete().eq('property_id', propertyId)
+        console.log('deleteProperty: Deleting financial entries...')
+        const { error: err3 } = await supabase.from('financial_entries').delete().eq('property_id', propertyId)
+        if (err3) console.error('Error deleting financial_entries:', err3)
 
-    // 4. Finally Delete the Property
-    const { error } = await supabase.from('properties').delete().eq('id', propertyId)
+        console.log('deleteProperty: Finally deleting property row...')
+        const { error } = await supabase.from('properties').delete().eq('id', propertyId)
 
-    if (error) {
-        console.error('Error deleting property:', error)
-        return { error: 'Ocorreu um erro ao remover: ' + error.message }
+        if (error) {
+            console.error('Error deleting property row:', error)
+            return { error: 'Ocorreu um erro ao remover o anúncio: ' + error.message }
+        }
+
+        console.log('deleteProperty: SUCCESS')
+        revalidatePath('/dashboard')
+        return { success: true }
+    } catch (e: any) {
+        console.error('deleteProperty: FATAL ERROR:', e)
+        return { error: 'Erro inesperado: ' + e.message }
     }
-
-    revalidatePath('/dashboard')
-    return { success: true }
 }
 
 export async function logFinancialEntry(data: { property_id?: string, type: 'visit' | 'commission' | 'other', amount: number, description?: string }) {

@@ -1,11 +1,11 @@
-'use client'
-
 import { deleteProperty, logFinancialEntry, updatePropertyStatus } from "@/app/dashboard/actions"
 import { useTransition, useState } from "react"
 import Link from 'next/link'
 import { formatCurrency } from "@/utils/format"
+import { useRouter } from "next/navigation"
 
 export default function AdminDashboard({ properties, stats }: { properties: any[], stats: any }) {
+    const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [filter, setFilter] = useState('all')
 
@@ -13,7 +13,12 @@ export default function AdminDashboard({ properties, stats }: { properties: any[
         if (!confirm('Tem certeza que deseja remover este imóvel definitivamente?')) return
         startTransition(async () => {
             const res = await deleteProperty(id)
-            if (res.error) alert(res.error)
+            if (res.error) {
+                alert(res.error)
+            } else {
+                alert('Imóvel removido com sucesso!')
+                router.refresh()
+            }
         })
     }
 
