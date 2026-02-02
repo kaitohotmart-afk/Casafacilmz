@@ -215,6 +215,20 @@ export async function deleteProperty(propertyId: string) {
     }
 
     try {
+        // Diagnostic check: Can we even see this property?
+        console.log('deleteProperty: Checking visibility for prop:', propertyId)
+        const { data: visibleProp, error: visibleError } = await supabase
+            .from('properties')
+            .select('id, owner_id')
+            .eq('id', propertyId)
+            .single()
+
+        console.log('deleteProperty: Visibility check result:', { visibleProp, error: visibleError })
+
+        if (visibleError || !visibleProp) {
+            return { error: 'O imóvel não foi encontrado ou você não tem permissão para visualizá-lo (RLS SELECT).' }
+        }
+
         console.log('deleteProperty: Deleting images for prop:', propertyId)
         const { count: imgCount, error: err1 } = await supabase
             .from('property_images')
