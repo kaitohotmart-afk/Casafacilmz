@@ -207,39 +207,58 @@ export async function deleteProperty(propertyId: string) {
     }
 
     // Role Check
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    console.log('deleteProperty: User role:', profile?.role)
-    if (profile?.role !== 'admin') {
-        return { error: 'Unauthorized' }
+    const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    console.log('deleteProperty: Profile fetch result:', { role: profile?.role, error: profileError })
+
+    if (profileError || profile?.role !== 'admin') {
+        return { error: 'Não autorizado: Sua conta não tem permissão de administrador.' }
     }
 
     try {
-        console.log('deleteProperty: Deleting related images...')
-        const { error: err1 } = await supabase.from('property_images').delete().eq('property_id', propertyId)
-        if (err1) console.error('Error deleting images:', err1)
+        console.log('deleteProperty: Deleting images for prop:', propertyId)
+        const { count: imgCount, error: err1 } = await supabase
+            .from('property_images')
+            .delete({ count: 'exact' })
+            .eq('property_id', propertyId)
+        console.log(`deleteProperty: Removed ${imgCount} images. Error:`, err1)
 
         console.log('deleteProperty: Deleting interaction logs...')
-        const { error: err2 } = await supabase.from('interaction_logs').delete().eq('property_id', propertyId)
-        if (err2) console.error('Error deleting interaction_logs:', err2)
+        const { count: logCount, error: err2 } = await supabase
+            .from('interaction_logs')
+            .delete({ count: 'exact' })
+            .eq('property_id', propertyId)
+        console.log(`deleteProperty: Removed ${logCount} logs. Error:`, err2)
 
         console.log('deleteProperty: Deleting financial entries...')
-        const { error: err3 } = await supabase.from('financial_entries').delete().eq('property_id', propertyId)
-        if (err3) console.error('Error deleting financial_entries:', err3)
+        const { count: finCount, error: err3 } = await supabase
+            .from('financial_entries')
+            .delete({ count: 'exact' })
+            .eq('property_id', propertyId)
+        console.log(`deleteProperty: Removed ${finCount} financial entries. Error:`, err3)
 
         console.log('deleteProperty: Finally deleting property row...')
-        const { error } = await supabase.from('properties').delete().eq('id', propertyId)
+        const { count: propCount, error: propError } = await supabase
+            .from('properties')
+            .delete({ count: 'exact' })
+            .eq('id', propertyId)
 
-        if (error) {
-            console.error('Error deleting property row:', error)
-            return { error: 'Ocorreu um erro ao remover o anúncio: ' + error.message }
+        if (propError) {
+            console.error('Error deleting property row:', propError)
+            return { error: 'Erro no banco de dados ao remover imóvel: ' + propError.message }
+        }
+
+        console.log(`deleteProperty: Removed ${propCount} property rows.`)
+
+        if (propCount === 0) {
+            return { error: 'O imóvel não foi encontrado ou já foi removido.' }
         }
 
         console.log('deleteProperty: SUCCESS')
         revalidatePath('/dashboard')
-        return { success: true }
+        return { success: true, count: propCount }
     } catch (e: any) {
         console.error('deleteProperty: FATAL ERROR:', e)
-        return { error: 'Erro inesperado: ' + e.message }
+        return { error: 'Erro fatal: ' + e.message }
     }
 }
 
