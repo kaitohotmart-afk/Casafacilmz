@@ -22,6 +22,16 @@ export default function Navbar() {
                     Casa Fácil <span style={{ color: 'var(--pk-brand-secondary)' }}>MZ</span>
                 </Link>
 
+                {/* Mobile Quick Actions */}
+                <div className="mobile-actions" style={{ display: 'none', gap: '0.5rem', marginLeft: 'auto', marginRight: '0.5rem' }}>
+                    <Link href="/login" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--pk-brand-primary)', border: '1px solid var(--pk-brand-primary)', padding: '0.4rem 0.75rem', borderRadius: 'var(--pk-radius-sm)' }}>
+                        Entrar
+                    </Link>
+                    <Link href="/signup" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white', background: 'var(--pk-brand-primary)', padding: '0.4rem 0.75rem', borderRadius: 'var(--pk-radius-sm)' }}>
+                        Registar
+                    </Link>
+                </div>
+
                 {/* Desktop Menu */}
                 <div className="desktop-menu" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
                     <Link href="/about" style={{ fontWeight: 500, fontSize: '0.95rem', color: pathname === '/about' ? 'var(--pk-brand-secondary)' : 'var(--pk-text-secondary)' }}>Sobre</Link>
@@ -87,6 +97,9 @@ export default function Navbar() {
           }
           .mobile-toggle {
             display: block !important;
+          }
+          .mobile-actions {
+            display: flex !important;
           }
         }
       `}</style>

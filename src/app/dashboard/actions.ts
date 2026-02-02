@@ -210,10 +210,21 @@ export async function deleteProperty(propertyId: string) {
         return { error: 'Unauthorized' }
     }
 
+    // 1. Delete Related Images
+    await supabase.from('property_images').delete().eq('property_id', propertyId)
+
+    // 2. Delete Interaction Logs
+    await supabase.from('interaction_logs').delete().eq('property_id', propertyId)
+
+    // 3. Delete Financial Entries
+    await supabase.from('financial_entries').delete().eq('property_id', propertyId)
+
+    // 4. Finally Delete the Property
     const { error } = await supabase.from('properties').delete().eq('id', propertyId)
 
     if (error) {
-        return { error: error.message }
+        console.error('Error deleting property:', error)
+        return { error: 'Ocorreu um erro ao remover: ' + error.message }
     }
 
     revalidatePath('/dashboard')
