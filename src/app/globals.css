@@ -1,27 +1,42 @@
+/* CSS Variables & Design System */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Brand Colors - Deep Navy & Burnt Orange */
+  --pk-brand-primary: #0F172A;
+  --pk-brand-primary-hover: #1E293B;
+  --pk-brand-secondary: #EA580C;
+  /* Burn Orange */
+  --pk-brand-secondary-hover: #C2410C;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+  /* Neutral Colors */
+  --pk-surface-white: #FFFFFF;
+  --pk-surface-050: #F8FAFC;
+  --pk-surface-100: #F1F5F9;
+  --pk-surface-200: #E2E8F0;
+  --pk-surface-300: #CBD5E1;
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+  /* Text Colors */
+  --pk-text-primary: #0F172A;
+  --pk-text-secondary: #475569;
+  --pk-text-tertiary: #64748B;
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Status Colors */
+  --pk-danger: #DC2626;
+  --pk-success: #16A34A;
+  --pk-warning: #D97706;
+
+  /* Radius */
+  --pk-radius-sm: 0.5rem;
+  --pk-radius-md: 0.75rem;
+  --pk-radius-lg: 1rem;
+
+  /* Shadows */
+  --pk-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --pk-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --pk-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --pk-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Spacing */
+  --pk-section-gap: 5rem;
 }
 
 * {
@@ -30,13 +45,98 @@ body {
   margin: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+html,
+body {
+  font-family: var(--font-inter), sans-serif;
+  color: var(--pk-text-primary);
+  background: var(--pk-surface-050);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-outfit), sans-serif;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--pk-text-primary);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Utilities */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--pk-radius-md);
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  border: none;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: var(--pk-brand-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--pk-brand-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--pk-text-primary);
+  border: 1px solid var(--pk-surface-200);
+}
+
+.btn-secondary:hover {
+  background: var(--pk-surface-050);
+}
+
+
+/* Property Detail Layout */
+.property-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.8fr) 1.2fr;
+  gap: 4rem;
+}
+
+@media (max-width: 900px) {
+  .property-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .contact-col {
+    order: 2;
+  }
+
+  .details-col {
+    order: 1;
   }
 }
