@@ -1,3 +1,5 @@
+'use client'
+
 import { deleteProperty, logFinancialEntry, updatePropertyStatus } from "@/app/dashboard/actions"
 import { useTransition, useState } from "react"
 import Link from 'next/link'
