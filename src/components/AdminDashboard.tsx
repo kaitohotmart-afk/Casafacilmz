@@ -18,8 +18,8 @@ export default function AdminDashboard({ properties, stats }: { properties: any[
             if (res.error) {
                 alert(res.error)
             } else {
-                alert('Imóvel removido com sucesso do banco de dados!')
-                router.refresh()
+                alert('Imóvel removido com sucesso!')
+                window.location.reload() // Force hard refresh to clear any cache
             }
         })
     }

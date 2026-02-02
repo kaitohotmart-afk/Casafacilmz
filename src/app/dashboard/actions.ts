@@ -255,6 +255,8 @@ export async function deleteProperty(propertyId: string) {
 
         console.log('deleteProperty: SUCCESS')
         revalidatePath('/dashboard')
+        revalidatePath('/')
+        revalidatePath('/properties', 'layout')
         return { success: true, count: propCount }
     } catch (e: any) {
         console.error('deleteProperty: FATAL ERROR:', e)
