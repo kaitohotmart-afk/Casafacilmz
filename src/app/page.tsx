@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import Navbar from '@/components/Navbar'
+import WelcomeSelector from '@/components/WelcomeSelector'
 import PropertyCard from '@/components/PropertyCard'
 import Link from 'next/link'
 
@@ -19,6 +20,7 @@ export default async function Home() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
       <Navbar />
+      <WelcomeSelector />
 
       {/* Hero Section */}
       <section style={{
