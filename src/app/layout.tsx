@@ -23,6 +23,7 @@ import FloatingContact from "@/components/FloatingContact";
 
 // ... imports
 
+import { Suspense } from 'react';
 import AnalyticsTracker from '@/components/AnalyticsTracker';
 
 export default function RootLayout({
@@ -33,7 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.variable} ${inter.variable}`}>
-        <AnalyticsTracker />
+        <Suspense fallback={null}>
+          <AnalyticsTracker />
+        </Suspense>
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           {children}
           <Footer />
