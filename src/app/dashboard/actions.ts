@@ -346,3 +346,23 @@ export async function updateProfilePhone(phone: string) {
     revalidatePath('/dashboard')
     return { success: true }
 }
+
+export async function logEvent(eventType: string, metadata: any = {}) {
+    const supabase = await createClient()
+
+    // Optionally get user if available, but not strictly required for public events
+    // const { data: { user } } = await supabase.auth.getUser()
+
+    const { error } = await supabase.from('analytics_events').insert({
+        event_type: eventType,
+        metadata,
+        created_at: new Date().toISOString()
+    })
+
+    if (error) {
+        console.error('Error logging analytics event:', error)
+        return { error: error.message }
+    }
+
+    return { success: true }
+}

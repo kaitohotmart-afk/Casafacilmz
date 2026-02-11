@@ -58,13 +58,37 @@ export default async function DashboardPage() {
         const visitRevenue = financeData?.filter(f => f.type === 'visit').reduce((acc, curr) => acc + Number(curr.amount), 0) || 0
         const commissionRevenue = financeData?.filter(f => f.type === 'commission').reduce((acc, curr) => acc + Number(curr.amount), 0) || 0
 
+        // Analytics Stats
+        const { data: analyticsData } = await supabase
+            .from('analytics_events')
+            .select('event_type, source')
+
+        const totalVisits = analyticsData?.filter(e => e.event_type === 'page_view').length || 0
+        const totalCalls = analyticsData?.filter(e => e.event_type === 'click_call').length || 0
+        const totalWhatsapp = analyticsData?.filter(e => e.event_type === 'click_whatsapp').length || 0
+
+        // Group visits by source
+        const visitsBySource = analyticsData
+            ?.filter(e => e.event_type === 'page_view')
+            .reduce((acc: any, curr) => {
+                const source = curr.source || 'direct'
+                acc[source] = (acc[source] || 0) + 1
+                return acc
+            }, {}) || {}
+
         stats = {
             totalProperties: totalProperties || 0,
             activeProperties: activeProperties || 0,
             totalUsers: totalUsers || 0,
             totalRevenue,
             visitRevenue,
-            commissionRevenue
+            commissionRevenue,
+            analytics: {
+                totalVisits,
+                totalCalls,
+                totalWhatsapp,
+                visitsBySource
+            }
         }
     }
 

@@ -101,6 +101,52 @@ export default function AdminDashboard({ properties, stats }: { properties: any[
                 </div>
             </div>
 
+            {/* Analytics Overview */}
+            {stats.analytics && (
+                <>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem' }}>Análise de Tráfego e Contactos</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
+                        <div className="admin-stat-card" style={{ borderLeft: '4px solid #F59E0B' }}>
+                            <div style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Visualizações do Site</div>
+                            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#F59E0B' }}>{stats.analytics.totalVisits}</div>
+                        </div>
+                        <div className="admin-stat-card" style={{ borderLeft: '4px solid #10B981' }}>
+                            <div style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Cliques no WhatsApp</div>
+                            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10B981' }}>{stats.analytics.totalWhatsapp}</div>
+                        </div>
+                        <div className="admin-stat-card" style={{ borderLeft: '4px solid #3B82F6' }}>
+                            <div style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Cliques Ligar</div>
+                            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#3B82F6' }}>{stats.analytics.totalCalls}</div>
+                        </div>
+                    </div>
+
+                    <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem' }}>Origem do Tráfego</h2>
+                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: 'var(--pk-radius-lg)', boxShadow: 'var(--pk-shadow-sm)', border: '1px solid var(--pk-surface-200)', marginBottom: '4rem', maxWidth: '600px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid var(--pk-surface-100)' }}>
+                                    <th style={{ textAlign: 'left', padding: '0.75rem', color: 'var(--pk-text-secondary)', fontSize: '0.85rem' }}>Fonte</th>
+                                    <th style={{ textAlign: 'right', padding: '0.75rem', color: 'var(--pk-text-secondary)', fontSize: '0.85rem' }}>Visitas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.entries(stats.analytics.visitsBySource || {}).map(([source, count]: [string, any]) => (
+                                    <tr key={source} style={{ borderBottom: '1px solid var(--pk-surface-050)' }}>
+                                        <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--pk-text-primary)' }}>{source}</td>
+                                        <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 700 }}>{count}</td>
+                                    </tr>
+                                ))}
+                                {Object.keys(stats.analytics.visitsBySource || {}).length === 0 && (
+                                    <tr>
+                                        <td colSpan={2} style={{ padding: '1rem', textAlign: 'center', color: 'var(--pk-text-tertiary)' }}>Sem dados de tráfego ainda.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
+
             {/* Core Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '4rem', opacity: 0.8 }}>
                 <div className="admin-stat-card-mini">

@@ -1,6 +1,6 @@
 'use client'
 
-import { logInteraction } from '@/app/dashboard/actions'
+import { logInteraction, logEvent } from '@/app/dashboard/actions'
 
 interface ContactButtonsProps {
     propertyId: string
@@ -15,6 +15,7 @@ export default function ContactButtons({ propertyId, ownerId, whatsappLink, what
     const handleAction = async (type: 'whatsapp' | 'call') => {
         // Log asynchronously, don't block the user
         logInteraction(propertyId, ownerId, type).catch(err => console.error('Failed to log interaction', err))
+        logEvent(`click_${type}`, { propertyId }).catch(err => console.error('Failed to log analytics', err))
     }
 
     return (

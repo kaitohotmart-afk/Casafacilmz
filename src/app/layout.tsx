@@ -23,6 +23,8 @@ import FloatingContact from "@/components/FloatingContact";
 
 // ... imports
 
+import AnalyticsTracker from '@/components/AnalyticsTracker';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.variable} ${inter.variable}`}>
+        <AnalyticsTracker />
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           {children}
           <Footer />
