@@ -25,6 +25,7 @@ import FloatingContact from "@/components/FloatingContact";
 
 import { Suspense } from 'react';
 import AnalyticsTracker from '@/components/AnalyticsTracker';
+import InstallAppBanner from '@/components/InstallAppBanner';
 
 export default function RootLayout({
   children,
@@ -37,6 +38,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <AnalyticsTracker />
         </Suspense>
+        <InstallAppBanner />
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           {children}
           <Footer />
