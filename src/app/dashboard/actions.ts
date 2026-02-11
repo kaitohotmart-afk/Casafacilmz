@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -229,29 +229,31 @@ export async function deleteProperty(propertyId: string) {
             return { error: 'O imóvel não foi encontrado ou você não tem permissão para visualizá-lo (RLS SELECT).' }
         }
 
+        const adminSupabase = await createAdminClient()
+
         console.log('deleteProperty: Deleting images for prop:', propertyId)
-        const { count: imgCount, error: err1 } = await supabase
+        const { count: imgCount, error: err1 } = await adminSupabase
             .from('property_images')
             .delete({ count: 'exact' })
             .eq('property_id', propertyId)
         console.log(`deleteProperty: Removed ${imgCount} images. Error:`, err1)
 
         console.log('deleteProperty: Deleting interaction logs...')
-        const { count: logCount, error: err2 } = await supabase
+        const { count: logCount, error: err2 } = await adminSupabase
             .from('interaction_logs')
             .delete({ count: 'exact' })
             .eq('property_id', propertyId)
         console.log(`deleteProperty: Removed ${logCount} logs. Error:`, err2)
 
         console.log('deleteProperty: Deleting financial entries...')
-        const { count: finCount, error: err3 } = await supabase
+        const { count: finCount, error: err3 } = await adminSupabase
             .from('financial_entries')
             .delete({ count: 'exact' })
             .eq('property_id', propertyId)
         console.log(`deleteProperty: Removed ${finCount} financial entries. Error:`, err3)
 
         console.log('deleteProperty: Finally deleting property row...')
-        const { count: propCount, error: propError } = await supabase
+        const { count: propCount, error: propError } = await adminSupabase
             .from('properties')
             .delete({ count: 'exact' })
             .eq('id', propertyId)
@@ -288,7 +290,8 @@ export async function logFinancialEntry(data: { property_id?: string, type: 'vis
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'admin') return { error: 'Não autorizado' }
 
-    const { error } = await supabase.from('financial_entries').insert(data)
+    const adminSupabase = await createAdminClient()
+    const { error } = await adminSupabase.from('financial_entries').insert(data)
 
     if (error) return { error: error.message }
 
@@ -306,7 +309,8 @@ export async function updatePropertyStatus(propertyId: string, status: string) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'admin') return { error: 'Não autorizado' }
 
-    const { error } = await supabase.from('properties').update({ status }).eq('id', propertyId)
+    const adminSupabase = await createAdminClient()
+    const { error } = await adminSupabase.from('properties').update({ status }).eq('id', propertyId)
 
     if (error) return { error: error.message }
 
@@ -365,4 +369,109 @@ export async function logEvent(eventType: string, metadata: any = {}) {
     }
 
     return { success: true }
+}
+
+export async function getUsers() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Não autenticado' }
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (profile?.role !== 'admin') return { error: 'Não autorizado' }
+
+    const adminSupabase = await createAdminClient()
+    const { data: users, error } = await adminSupabase
+        .from('profiles')
+        .select('*')
+        .order('updated_at', { ascending: false })
+
+    if (error) return { error: error.message }
+    return { users }
+}
+
+export async function getDashboardStats(range: 'today' | '7d' | '30d' | 'all' = '30d') {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Não autenticado' }
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (profile?.role !== 'admin') return { error: 'Não autorizado' }
+
+    const adminSupabase = await createAdminClient()
+
+    const now = new Date()
+    let startDate = new Date(0) // Default to all time
+
+    if (range === 'today') {
+        startDate = new Date(now.setHours(0, 0, 0, 0))
+    } else if (range === '7d') {
+        startDate = new Date(now.setDate(now.getDate() - 7))
+    } else if (range === '30d') {
+        startDate = new Date(now.setDate(now.getDate() - 30))
+    }
+
+    const startIso = startDate.toISOString()
+
+    // 1. Fetch Analytics Events
+    const { data: events } = await adminSupabase
+        .from('analytics_events')
+        .select('*')
+        .gte('created_at', startIso)
+
+    // 2. Fetch Financial Entries
+    const { data: financials } = await adminSupabase
+        .from('financial_entries')
+        .select('*')
+        .gte('created_at', startIso)
+
+    // 3. Fetch Interaction Logs
+    const { data: interactions } = await adminSupabase
+        .from('interaction_logs')
+        .select('*')
+        .gte('created_at', startIso)
+
+    // Aggregations
+    const totalVisits = events?.filter(e => e.event_type === 'page_view').length || 0
+    const whatsappClicks = events?.filter(e => e.event_type === 'click_whatsapp').length || 0
+    const callClicks = events?.filter(e => e.event_type === 'click_call').length || 0
+    const totalRevenue = financials?.reduce((sum, f) => sum + f.amount, 0) || 0
+
+    // Traffic Sources
+    const sourcesMap: Record<string, number> = {}
+    events?.filter(e => e.event_type === 'page_view').forEach(e => {
+        const s = e.source || 'Direto'
+        sourcesMap[s] = (sourcesMap[s] || 0) + 1
+    })
+    const trafficSources = Object.entries(sourcesMap).map(([name, value]) => ({ name, value }))
+
+    // Trends (Daily)
+    const dailyMap: Record<string, { date: string, visits: number, revenue: number }> = {}
+    events?.filter(e => e.event_type === 'page_view').forEach(e => {
+        const d = new Date(e.created_at).toLocaleDateString()
+        if (!dailyMap[d]) dailyMap[d] = { date: d, visits: 0, revenue: 0 }
+        dailyMap[d].visits++
+    })
+    financials?.forEach(f => {
+        const d = new Date(f.created_at).toLocaleDateString()
+        if (!dailyMap[d]) dailyMap[d] = { date: d, visits: 0, revenue: 0 }
+        dailyMap[d].revenue += f.amount
+    })
+
+    const trends = Object.values(dailyMap).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+    return {
+        stats: {
+            totalVisits,
+            whatsappClicks,
+            callClicks,
+            totalRevenue,
+            trafficSources,
+            trends,
+            funnel: [
+                { name: 'Visitas', value: totalVisits },
+                { name: 'Contactos', value: whatsappClicks + callClicks },
+                { name: 'Vendas/Ganhos', value: financials?.length || 0 }
+            ]
+        }
+    }
 }

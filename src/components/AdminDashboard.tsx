@@ -5,307 +5,241 @@ import { useTransition, useState } from "react"
 import Link from 'next/link'
 import { formatCurrency } from "@/utils/format"
 import { useRouter } from "next/navigation"
+import {
+    Users, Home, TrendingUp, MousePointer2, Phone, MessageCircle,
+    BarChart3, LayoutDashboard, Settings, LogOut, ChevronRight, Briefcase
+} from 'lucide-react'
+import "./dashboard.css"
 
-export default function AdminDashboard({ properties, stats }: { properties: any[], stats: any }) {
+// Sub-components
+import MetricCard from "./Dashboard/MetricCard"
+import { RevenueTrendChart, TrafficSourcePie } from "./Dashboard/Charts"
+import SalesFunnel from "./Dashboard/SalesFunnel"
+import UserManagementTable from "./Dashboard/UserManagementTable"
+
+export default function AdminDashboard({ properties, stats, users, currentRange }: {
+    properties: any[],
+    stats: any,
+    users: any[],
+    currentRange: string
+}) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [filter, setFilter] = useState('all')
+    const [activeTab, setActiveTab] = useState('overview')
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Tem certeza que deseja remover este imóvel definitivamente?')) return
-        startTransition(async () => {
-            const res = await deleteProperty(id)
-            if (res.error) {
-                alert(res.error)
-            } else {
-                alert('Imóvel removido com sucesso!')
-                window.location.reload() // Force hard refresh to clear any cache
-            }
-        })
+    const statsConfig = [
+        { title: 'Faturamento Total', value: formatCurrency(stats.totalRevenue), icon: Briefcase, color: '#10B981', trend: { value: 12, label: 'vs anterior' } },
+        { title: 'Visualizações', value: stats.totalVisits, icon: MousePointer2, color: '#8B5CF6', trend: { value: 24, label: 'vs anterior' } },
+        { title: 'Leads (WhatsApp/Call)', value: stats.whatsappClicks + stats.callClicks, icon: MessageCircle, color: '#3B82F6', trend: { value: 5, label: 'vs anterior' } },
+        { title: 'Utilizadores', value: stats.totalUsers, icon: Users, color: '#F59E0B' },
+    ]
+
+    const handleRangeChange = (range: string) => {
+        router.push(`/dashboard?range=${range}`)
     }
 
-    const handleLogVisit = async (propertyId: string) => {
+    const handleDelete = async (id: string) => {
+        if (!confirm('Remover imóvel definitivamente?')) return
         startTransition(async () => {
-            const res = await logFinancialEntry({
-                property_id: propertyId,
-                type: 'visit',
-                amount: 150,
-                description: 'Taxa de visita'
-            })
+            const res = await deleteProperty(id)
             if (res.error) alert(res.error)
-            else alert('Visita registada: +150 MZN')
+            else router.refresh()
         })
     }
 
     const handleStatusChange = async (propertyId: string, currentStatus: string) => {
         const nextStatus = currentStatus === 'available' ? 'sold' : 'available'
-        const label = nextStatus === 'sold' ? 'Vendido/Alugado' : 'Disponível'
-
-        if (!confirm(`Mudar status para ${label}?`)) return
+        if (!confirm(`Mudar status para ${nextStatus === 'sold' ? 'Vendido' : 'Disponível'}?`)) return
 
         let commission = 0
         if (nextStatus === 'sold') {
-            const val = prompt('Digite o valor da comissão recebida (MZN):', '0')
+            const val = prompt('Valor da comissão (MZN):', '0')
             commission = parseFloat(val || '0')
         }
 
         startTransition(async () => {
-            const res = await updatePropertyStatus(propertyId, nextStatus)
-            if (res.error) {
-                alert(res.error)
-                return
-            }
-
+            await updatePropertyStatus(propertyId, nextStatus)
             if (commission > 0) {
-                await logFinancialEntry({
-                    property_id: propertyId,
-                    type: 'commission',
-                    amount: commission,
-                    description: `Comissão de fecho (${label})`
-                })
+                await logFinancialEntry({ property_id: propertyId, type: 'commission', amount: commission, description: 'Comissão de venda' })
             }
+            router.refresh()
         })
     }
 
-    const filteredProperties = properties.filter(p => {
-        if (filter === 'all') return true
-        return p.status === filter
-    })
+    const filteredProperties = properties.filter(p => filter === 'all' || p.status === filter)
 
     return (
-        <div className="container" style={{ padding: '3rem 1.5rem' }}>
-            <div style={{ marginBottom: '3rem', borderBottom: '1px solid var(--pk-surface-200)', paddingBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2.5rem', color: 'var(--pk-brand-primary)', marginBottom: '0.5rem', fontWeight: 800 }}>Admin <span style={{ color: 'var(--pk-brand-secondary)' }}>Dashboard</span></h1>
-                    <p style={{ color: 'var(--pk-text-secondary)', fontSize: '1.1rem' }}>Controlo total: Imóveis, Utilizadores e <span style={{ color: 'var(--pk-success)', fontWeight: 700 }}>Financeiro</span>.</p>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <Link href="/dashboard/properties/new" className="btn btn-primary" style={{ fontSize: '0.9rem' }}>+ Novo Imóvel</Link>
-                </div>
-            </div>
-
-            {/* Financial Overview */}
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem' }}>Resumo Financeiro</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
-                <div className="admin-stat-card" style={{ borderLeft: '4px solid var(--pk-success)' }}>
-                    <div style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Faturamento Total</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--pk-success)' }}>{formatCurrency(stats.totalRevenue)}</div>
-                </div>
-                <div className="admin-stat-card" style={{ borderLeft: '4px solid var(--pk-brand-secondary)' }}>
-                    <div style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Taxas de Visita (150 MZN)</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--pk-brand-secondary)' }}>{formatCurrency(stats.visitRevenue)}</div>
-                </div>
-                <div className="admin-stat-card" style={{ borderLeft: '4px solid #6366F1' }}>
-                    <div style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Comissões</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 800, color: '#6366F1' }}>{formatCurrency(stats.commissionRevenue)}</div>
-                </div>
-            </div>
-
-            {/* Analytics Overview */}
-            {stats.analytics && (
-                <>
-                    <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem' }}>Análise de Tráfego e Contactos</h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
-                        <div className="admin-stat-card" style={{ borderLeft: '4px solid #F59E0B' }}>
-                            <div style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Visualizações do Site</div>
-                            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#F59E0B' }}>{stats.analytics.totalVisits}</div>
-                        </div>
-                        <div className="admin-stat-card" style={{ borderLeft: '4px solid #10B981' }}>
-                            <div style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Cliques no WhatsApp</div>
-                            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10B981' }}>{stats.analytics.totalWhatsapp}</div>
-                        </div>
-                        <div className="admin-stat-card" style={{ borderLeft: '4px solid #3B82F6' }}>
-                            <div style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Cliques Ligar</div>
-                            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#3B82F6' }}>{stats.analytics.totalCalls}</div>
-                        </div>
+        <div className="dashboard-root">
+            {/* Main Content */}
+            <main style={{ maxWidth: '1400px', margin: '0 auto' }}>
+                <header className="dashboard-header">
+                    <div className="dashboard-title">
+                        <h1>Dashboard <span>Pro</span></h1>
+                        <p style={{ color: 'var(--pk-text-tertiary)', marginTop: '0.5rem', fontWeight: 500 }}>Bem-vindo, Admin. Aqui está o desempenho da sua imobiliária.</p>
                     </div>
-
-                    <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1rem' }}>Origem do Tráfego</h2>
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: 'var(--pk-radius-lg)', boxShadow: 'var(--pk-shadow-sm)', border: '1px solid var(--pk-surface-200)', marginBottom: '4rem', maxWidth: '600px' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr style={{ borderBottom: '1px solid var(--pk-surface-100)' }}>
-                                    <th style={{ textAlign: 'left', padding: '0.75rem', color: 'var(--pk-text-secondary)', fontSize: '0.85rem' }}>Fonte</th>
-                                    <th style={{ textAlign: 'right', padding: '0.75rem', color: 'var(--pk-text-secondary)', fontSize: '0.85rem' }}>Visitas</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {Object.entries(stats.analytics.visitsBySource || {}).map(([source, count]: [string, any]) => (
-                                    <tr key={source} style={{ borderBottom: '1px solid var(--pk-surface-050)' }}>
-                                        <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--pk-text-primary)' }}>{source}</td>
-                                        <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 700 }}>{count}</td>
-                                    </tr>
-                                ))}
-                                {Object.keys(stats.analytics.visitsBySource || {}).length === 0 && (
-                                    <tr>
-                                        <td colSpan={2} style={{ padding: '1rem', textAlign: 'center', color: 'var(--pk-text-tertiary)' }}>Sem dados de tráfego ainda.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                    <div className="dashboard-actions">
+                        {/* Range Selector */}
+                        <select
+                            value={currentRange}
+                            onChange={(e) => handleRangeChange(e.target.value)}
+                            className="range-select"
+                        >
+                            <option value="today">Hoje</option>
+                            <option value="7d">Últimos 7 dias</option>
+                            <option value="30d">Últimos 30 dias</option>
+                            <option value="all">Todo o tempo</option>
+                        </select>
+                        <Link href="/dashboard/properties/new" className="btn btn-primary" style={{ boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }}>
+                            + Novo Imóvel
+                        </Link>
                     </div>
-                </>
-            )}
+                </header>
 
-            {/* Core Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '4rem', opacity: 0.8 }}>
-                <div className="admin-stat-card-mini">
-                    <strong>{stats.totalProperties}</strong> Imóveis
+                {/* Tabs */}
+                <div className="dashboard-tabs">
+                    {['overview', 'properties', 'users'].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+                        >
+                            {tab === 'overview' ? 'Visão Geral' : tab === 'properties' ? 'Imóveis' : 'Utilizadores'}
+                        </button>
+                    ))}
                 </div>
-                <div className="admin-stat-card-mini">
-                    <strong>{stats.activeProperties}</strong> Activos
-                </div>
-                <div className="admin-stat-card-mini">
-                    <strong>{stats.totalUsers}</strong> Utilizadores
-                </div>
-            </div>
 
-            {/* Listings Section */}
-            <div style={{ background: 'white', borderRadius: 'var(--pk-radius-lg)', boxShadow: 'var(--pk-shadow-lg)', border: '1px solid var(--pk-surface-200)', overflow: 'hidden' }}>
-                <div style={{ padding: '2rem', borderBottom: '1px solid var(--pk-surface-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }}>Gestão de Imóveis</h2>
-                    <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--pk-surface-050)', padding: '0.25rem', borderRadius: 'var(--pk-radius-sm)' }}>
-                        <button onClick={() => setFilter('all')} style={{ padding: '0.5rem 1rem', border: 'none', background: filter === 'all' ? 'white' : 'transparent', borderRadius: 'var(--pk-radius-sm)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', boxShadow: filter === 'all' ? 'var(--pk-shadow-sm)' : 'none' }}>Todos</button>
-                        <button onClick={() => setFilter('available')} style={{ padding: '0.5rem 1rem', border: 'none', background: filter === 'available' ? 'white' : 'transparent', borderRadius: 'var(--pk-radius-sm)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', boxShadow: filter === 'available' ? 'var(--pk-shadow-sm)' : 'none' }}>Disponíveis</button>
-                        <button onClick={() => setFilter('sold')} style={{ padding: '0.5rem 1rem', border: 'none', background: filter === 'sold' ? 'white' : 'transparent', borderRadius: 'var(--pk-radius-sm)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', boxShadow: filter === 'sold' ? 'var(--pk-shadow-sm)' : 'none' }}>Vendidos</button>
-                    </div>
-                </div>
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead style={{ background: 'var(--pk-surface-050)', textAlign: 'left' }}>
-                            <tr>
-                                <th style={{ padding: '1.25rem 2rem', color: 'var(--pk-text-secondary)', fontWeight: 600 }}>Imóvel</th>
-                                <th style={{ padding: '1.25rem', color: 'var(--pk-text-secondary)', fontWeight: 600 }}>Preço</th>
-                                <th style={{ padding: '1.25rem', color: 'var(--pk-text-secondary)', fontWeight: 600 }}>Proprietário</th>
-                                <th style={{ padding: '1.25rem', color: 'var(--pk-text-secondary)', fontWeight: 600 }}>Status</th>
-                                <th style={{ padding: '1.25rem 2rem', color: 'var(--pk-text-secondary)', fontWeight: 600, textAlign: 'right' }}>Gestão de Valor</th>
-                                <th style={{ padding: '1.25rem 2rem', color: 'var(--pk-text-secondary)', fontWeight: 600, textAlign: 'right' }}>Acções</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredProperties.map(p => (
-                                <tr key={p.id} style={{ borderBottom: '1px solid var(--pk-surface-100)', transition: 'background 0.2s' }}>
-                                    <td style={{ padding: '1.5rem 2rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                                            <div style={{ width: '60px', height: '60px', borderRadius: 'var(--pk-radius-md)', background: 'var(--pk-surface-100)', flexShrink: 0, overflow: 'hidden' }}>
-                                                {p.property_images?.[0] && (
-                                                    <img src={p.property_images[0].image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <Link href={`/properties/${p.id}`} style={{ fontWeight: 700, color: 'var(--pk-text-primary)' }} target="_blank">
-                                                    {p.title}
-                                                </Link>
-                                                <div style={{ fontSize: '0.85rem', color: 'var(--pk-text-tertiary)', marginTop: '0.25rem' }}>📍 {p.location_district} • {p.profiles?.full_name || p.external_owner_name}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '1.5rem 1.25rem', fontWeight: 700, color: 'var(--pk-brand-primary)' }}>{formatCurrency(p.price)}</td>
-                                    <td style={{ padding: '1.5rem 1.25rem' }}>
-                                        <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{p.external_owner_name || 'Usuário Site'}</div>
-                                        <div style={{ fontSize: '0.8rem', color: 'var(--pk-text-tertiary)' }}>{p.external_owner_phone || p.profiles?.phone || 'Sem contacto'}</div>
-                                    </td>
-                                    <td style={{ padding: '1.5rem 1.25rem' }}>
-                                        <button
-                                            onClick={() => handleStatusChange(p.id, p.status)}
-                                            disabled={isPending}
-                                            style={{
-                                                padding: '0.5rem 1rem',
-                                                borderRadius: 'var(--pk-radius-sm)',
-                                                fontSize: '0.8rem',
-                                                fontWeight: 700,
-                                                border: '1px solid',
-                                                cursor: 'pointer',
-                                                background: p.status === 'available' ? 'white' : '#F3F4F6',
-                                                borderColor: p.status === 'available' ? 'var(--pk-brand-secondary)' : '#D1D5DB',
-                                                color: p.status === 'available' ? 'var(--pk-brand-secondary)' : '#4B5563',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            {p.status === 'available' ? 'Marcar como Vendido' : 'Reativar Imóvel'}
-                                        </button>
-                                        <div style={{ marginTop: '0.5rem', fontSize: '0.7rem', fontWeight: 600, color: p.status === 'available' ? 'var(--pk-success)' : 'var(--pk-danger)' }}>
-                                            {p.status === 'available' ? '● DISPONÍVEL' : '● VENDIDO/ALUGADO'}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                                            <Link
-                                                href={`/dashboard/properties/${p.id}/edit`}
-                                                style={{
-                                                    padding: '0.5rem 1rem',
-                                                    borderRadius: 'var(--pk-radius-sm)',
-                                                    fontSize: '0.8rem',
-                                                    fontWeight: 600,
-                                                    background: 'white',
-                                                    color: 'var(--pk-text-primary)',
-                                                    border: '1px solid var(--pk-surface-200)',
-                                                    textDecoration: 'none'
-                                                }}
-                                            >
-                                                Editar
-                                            </Link>
-                                            <button
-                                                onClick={() => handleLogVisit(p.id)}
-                                                disabled={isPending}
-                                                style={{
-                                                    background: 'var(--pk-brand-secondary)',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    padding: '0.5rem 1rem',
-                                                    borderRadius: 'var(--pk-radius-sm)',
-                                                    fontSize: '0.8rem',
-                                                    fontWeight: 600,
-                                                    cursor: 'pointer',
-                                                    boxShadow: 'var(--pk-shadow-sm)'
-                                                }}
-                                            >
-                                                + Registar Visita
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '1.5rem 2rem', textAlign: 'right' }}>
-                                        <button
-                                            onClick={() => handleDelete(p.id)}
-                                            disabled={isPending}
-                                            style={{
-                                                color: 'var(--pk-danger)',
-                                                background: 'transparent',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                fontSize: '0.85rem',
-                                            }}
-                                        >
-                                            Remover
-                                        </button>
-                                    </td>
-                                </tr>
+                {activeTab === 'overview' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                        {/* Metrics Grid */}
+                        <div className="metric-grid">
+                            {statsConfig.map((item) => (
+                                <MetricCard key={item.title} {...item} />
                             ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                        </div>
 
-            <style jsx>{`
-                .admin-stat-card {
-                    background: white;
-                    padding: 2rem;
-                    border-radius: var(--pk-radius-lg);
-                    box-shadow: var(--pk-shadow-md);
-                    border: 1px solid var(--pk-surface-200);
-                }
-                .admin-stat-card-mini {
-                    background: white;
-                    padding: 1rem 1.5rem;
-                    border-radius: var(--pk-radius-md);
-                    border: 1px solid var(--pk-surface-200);
-                    font-size: 0.9rem;
-                    color: var(--pk-text-secondary);
-                }
-                tr:hover {
-                    background: var(--pk-surface-050);
-                }
-            `}</style>
+                        {/* Charts Area */}
+                        <div className="chart-grid-main">
+                            <RevenueTrendChart trends={stats.trends} />
+                            <TrafficSourcePie sources={stats.trafficSources} />
+                        </div>
+
+                        {/* Funnel & Performance */}
+                        <div className="chart-grid-main">
+                            <SalesFunnel data={stats.funnel} />
+                            <div className="premium-card">
+                                <h4 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem' }}>Ranking de Performance</h4>
+                                <div className="ranking-list">
+                                    {properties.slice(0, 5).map((p, idx) => (
+                                        <div key={p.id} className="ranking-item">
+                                            <div className="ranking-info">
+                                                <span className="ranking-number">#0{idx + 1}</span>
+                                                <div style={{ width: '3rem', height: '3rem', borderRadius: 'var(--pk-radius-sm)', overflow: 'hidden', flexShrink: 0 }}>
+                                                    {p.property_images?.[0] && <img src={p.property_images[0].image_url} className="property-thumb" alt="" />}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--pk-text-primary)' }}>{p.title}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: 'var(--pk-text-tertiary)' }}>{p.type} • {p.status}</div>
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ fontWeight: 800, color: '#8b5cf6', fontSize: '0.9rem' }}>{formatCurrency(p.price)}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'properties' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Gestão de Listagens</h2>
+                            <div style={{ display: 'flex', gap: '0.5rem', background: 'white', padding: '0.25rem', borderRadius: 'var(--pk-radius-md)', border: '1px solid var(--pk-surface-100)' }}>
+                                {['all', 'available', 'sold'].map((f) => (
+                                    <button
+                                        key={f}
+                                        onClick={() => setFilter(f)}
+                                        style={{
+                                            padding: '0.5rem 1rem',
+                                            borderRadius: 'var(--pk-radius-sm)',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700,
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            background: filter === f ? '#8b5cf6' : 'transparent',
+                                            color: filter === f ? 'white' : 'var(--pk-text-tertiary)',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        {f === 'all' ? 'Todos' : f === 'available' ? 'Disponíveis' : 'Vendidos'}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="admin-table-container">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Imóvel</th>
+                                        <th>Proprietário</th>
+                                        <th>Status</th>
+                                        <th style={{ textAlign: 'right' }}>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredProperties.map((p) => (
+                                        <tr key={p.id}>
+                                            <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                    <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', background: '#f3f4f6', overflow: 'hidden', flexShrink: 0 }}>
+                                                        {p.property_images?.[0] && <img src={p.property_images[0].image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />}
+                                                    </div>
+                                                    <div>
+                                                        <Link href={`/properties/${p.id}`} style={{ fontWeight: 700, fontSize: '0.875rem' }} target="_blank">{p.title}</Link>
+                                                        <div style={{ fontSize: '0.75rem', color: 'var(--pk-text-tertiary)' }}>{formatCurrency(p.price)}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{p.external_owner_name || p.profiles?.full_name || 'Desconhecido'}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--pk-text-tertiary)' }}>{p.external_owner_phone || p.profiles?.phone || 'Sem contacto'}</div>
+                                            </td>
+                                            <td>
+                                                <span className={`status-badge ${p.status === 'available' ? 'status-available' : 'status-sold'}`}>
+                                                    {p.status === 'available' ? 'Disponível' : 'Vendido'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                    <button onClick={() => handleStatusChange(p.id, p.status)} style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', background: 'white', color: '#6b7280', cursor: 'pointer' }}>
+                                                        <TrendingUp size={16} />
+                                                    </button>
+                                                    <Link href={`/dashboard/properties/${p.id}/edit`} style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', background: 'white', color: '#6b7280' }}>
+                                                        <BarChart3 size={16} />
+                                                    </Link>
+                                                    <button onClick={() => handleDelete(p.id)} style={{ padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #fee2e2', background: 'white', color: '#dc2626', cursor: 'pointer' }}>
+                                                        <LogOut size={16} style={{ transform: 'rotate(90deg)' }} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'users' && (
+                    <div style={{ animation: 'fade-in 0.5s ease' }}>
+                        <UserManagementTable users={users} />
+                    </div>
+                )}
+            </main>
         </div>
     )
 }

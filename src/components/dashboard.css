@@ -1,0 +1,254 @@
+/* Dashboard V2 - Vanilla CSS Styles */
+
+.dashboard-root {
+    background-color: #f9fafb;
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.dashboard-title h1 {
+    font-size: 2.25rem;
+    color: var(--pk-brand-primary);
+    font-weight: 800;
+}
+
+.dashboard-title span {
+    color: #8b5cf6;
+    /* Pro color */
+}
+
+.dashboard-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.range-select {
+    background: white;
+    border: 1px solid var(--pk-surface-200);
+    padding: 0.6rem 1rem;
+    border-radius: var(--pk-radius-md);
+    font-weight: 600;
+    color: var(--pk-text-primary);
+    outline: none;
+    box-shadow: var(--pk-shadow-sm);
+}
+
+.dashboard-tabs {
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid var(--pk-surface-200);
+    margin-bottom: 2rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 1rem 0;
+    font-weight: 700;
+    color: var(--pk-text-tertiary);
+    cursor: pointer;
+    font-size: 0.875rem;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--pk-text-primary);
+}
+
+.tab-btn.active {
+    color: #8b5cf6;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #8b5cf6;
+}
+
+/* Grids */
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chart-grid-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1024px) {
+    .chart-grid-main {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Cards */
+.premium-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--pk-radius-lg);
+    border: 1px solid var(--pk-surface-100);
+    box-shadow: var(--pk-shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.premium-card:hover {
+    box-shadow: var(--pk-shadow-md);
+}
+
+.card-header-icon {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.icon-box {
+    padding: 0.75rem;
+    border-radius: var(--pk-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.trend-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+}
+
+.trend-up {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.trend-down {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* Tables */
+.admin-table-container {
+    background: white;
+    border-radius: var(--pk-radius-lg);
+    border: 1px solid var(--pk-surface-100);
+    box-shadow: var(--pk-shadow-sm);
+    overflow: hidden;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.admin-table th {
+    background: var(--pk-surface-050);
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--pk-text-tertiary);
+    letter-spacing: 0.05em;
+}
+
+.admin-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--pk-surface-050);
+}
+
+.admin-table tr:hover {
+    background-color: #f9fafb;
+}
+
+.user-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #ede9fe;
+    color: #7c3aed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 1rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-available {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.status-sold {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* Ranking List */
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ranking-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--pk-surface-050);
+    border-radius: var(--pk-radius-md);
+    transition: background 0.2s;
+}
+
+.ranking-item:hover {
+    background: var(--pk-surface-100);
+}
+
+.ranking-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ranking-number {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #d1d5db;
+}
+
+.property-thumb {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--pk-radius-sm);
+    object-fit: cover;
+    background: #e5e7eb;
+}

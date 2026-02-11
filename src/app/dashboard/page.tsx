@@ -2,8 +2,16 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import OwnerDashboard from '@/components/OwnerDashboard'
 import AdminDashboard from '@/components/AdminDashboard'
+import { getDashboardStats, getUsers } from './actions'
 
-export default async function DashboardPage() {
+interface Props {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function DashboardPage({ searchParams }: Props) {
+    const params = await searchParams
+    const range = (params.range as any) || '30d'
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -19,7 +27,7 @@ export default async function DashboardPage() {
     // Build query for properties
     let query = supabase
         .from('properties')
-        .select('*, property_images(id, image_url), profiles:owner_id(id, phone)')
+        .select('*, property_images(id, image_url), profiles:owner_id(id, phone, full_name)')
         .order('created_at', { ascending: false })
 
     if (!isAdmin) {
@@ -27,6 +35,29 @@ export default async function DashboardPage() {
     }
 
     const { data: properties } = await query
+
+    // If Admin, fetch stats and users
+    let adminStats = null
+    let allUsers: any[] = []
+
+    if (isAdmin) {
+        const statsRes = await getDashboardStats(range)
+        adminStats = statsRes.stats
+
+        const usersRes = await getUsers()
+        allUsers = usersRes.users || []
+
+        // Add some basic counts that aren't range-bound for the overview
+        const { count: totalProperties } = await supabase.from('properties').select('*', { count: 'exact', head: true })
+        const { count: activeProperties } = await supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'available')
+
+        adminStats = {
+            ...adminStats,
+            totalProperties: totalProperties || 0,
+            activeProperties: activeProperties || 0,
+            totalUsers: allUsers.length
+        }
+    }
 
     // Fetch Interaction Stats for non-admins (Owners)
     let propertyStats: Record<string, { whatsapp: number, call: number }> = {}
@@ -45,55 +76,13 @@ export default async function DashboardPage() {
         })
     }
 
-    // If Admin, fetch stats
-    let stats = null
     if (isAdmin) {
-        const { count: totalProperties } = await supabase.from('properties').select('*', { count: 'exact', head: true })
-        const { count: activeProperties } = await supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'available')
-        const { count: totalUsers } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
-
-        const { data: financeData } = await supabase.from('financial_entries').select('type, amount')
-
-        const totalRevenue = financeData?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0
-        const visitRevenue = financeData?.filter(f => f.type === 'visit').reduce((acc, curr) => acc + Number(curr.amount), 0) || 0
-        const commissionRevenue = financeData?.filter(f => f.type === 'commission').reduce((acc, curr) => acc + Number(curr.amount), 0) || 0
-
-        // Analytics Stats
-        const { data: analyticsData } = await supabase
-            .from('analytics_events')
-            .select('event_type, source')
-
-        const totalVisits = analyticsData?.filter(e => e.event_type === 'page_view').length || 0
-        const totalCalls = analyticsData?.filter(e => e.event_type === 'click_call').length || 0
-        const totalWhatsapp = analyticsData?.filter(e => e.event_type === 'click_whatsapp').length || 0
-
-        // Group visits by source
-        const visitsBySource = analyticsData
-            ?.filter(e => e.event_type === 'page_view')
-            .reduce((acc: any, curr) => {
-                const source = curr.source || 'direct'
-                acc[source] = (acc[source] || 0) + 1
-                return acc
-            }, {}) || {}
-
-        stats = {
-            totalProperties: totalProperties || 0,
-            activeProperties: activeProperties || 0,
-            totalUsers: totalUsers || 0,
-            totalRevenue,
-            visitRevenue,
-            commissionRevenue,
-            analytics: {
-                totalVisits,
-                totalCalls,
-                totalWhatsapp,
-                visitsBySource
-            }
-        }
-    }
-
-    if (isAdmin) {
-        return <AdminDashboard properties={properties || []} stats={stats} />
+        return <AdminDashboard
+            properties={properties || []}
+            stats={adminStats}
+            users={allUsers}
+            currentRange={range}
+        />
     }
 
     return <OwnerDashboard properties={properties || []} profile={profile} stats={propertyStats} />
