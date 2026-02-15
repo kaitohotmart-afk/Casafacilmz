@@ -41,7 +41,7 @@ export default function HowItWorksPage() {
                         <p style={{ marginBottom: '0.5rem' }}>Podem navegar livremente no site.</p>
                         <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Para visitas presenciais:</p>
                         <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginBottom: '1rem' }}>
-                            <li>É cobrada uma <strong>taxa de deslocamento de 150 MZN</strong>.</li>
+                            <li>É cobrada uma <strong>taxa de deslocamento de 300 MZN</strong>.</li>
                         </ul>
 
                         <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Pagamento via:</p>

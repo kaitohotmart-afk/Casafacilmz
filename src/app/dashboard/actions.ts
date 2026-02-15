@@ -379,14 +379,25 @@ export async function getUsers() {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'admin') return { error: 'Não autorizado' }
 
-    const adminSupabase = await createAdminClient()
-    const { data: users, error } = await adminSupabase
-        .from('profiles')
-        .select('*')
-        .order('updated_at', { ascending: false })
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) {
+        console.error('ERROR: SUPABASE_SERVICE_ROLE_KEY is missing')
+        return { error: 'Configuração do servidor incompleta (Service Role missing)' }
+    }
 
-    if (error) return { error: error.message }
-    return { users }
+    try {
+        const adminSupabase = await createAdminClient()
+        const { data: users, error } = await adminSupabase
+            .from('profiles')
+            .select('*')
+            .order('updated_at', { ascending: false })
+
+        if (error) throw error
+        return { users }
+    } catch (err: any) {
+        console.error('Error in getUsers:', err)
+        return { error: 'Falha ao carregar utilizadores: ' + (err.message || 'Erro desconhecido') }
+    }
 }
 
 export async function getDashboardStats(range: 'today' | '7d' | '30d' | 'all' = '30d') {
@@ -397,81 +408,92 @@ export async function getDashboardStats(range: 'today' | '7d' | '30d' | 'all' = 
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'admin') return { error: 'Não autorizado' }
 
-    const adminSupabase = await createAdminClient()
-
-    const now = new Date()
-    let startDate = new Date(0) // Default to all time
-
-    if (range === 'today') {
-        startDate = new Date(now.setHours(0, 0, 0, 0))
-    } else if (range === '7d') {
-        startDate = new Date(now.setDate(now.getDate() - 7))
-    } else if (range === '30d') {
-        startDate = new Date(now.setDate(now.getDate() - 30))
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) {
+        console.error('ERROR: SUPABASE_SERVICE_ROLE_KEY is missing')
+        return { error: 'Configuração do servidor incompleta (Service Role missing)' }
     }
 
-    const startIso = startDate.toISOString()
+    try {
+        const adminSupabase = await createAdminClient()
 
-    // 1. Fetch Analytics Events
-    const { data: events } = await adminSupabase
-        .from('analytics_events')
-        .select('*')
-        .gte('created_at', startIso)
+        const now = new Date()
+        let startDate = new Date(0) // Default to all time
 
-    // 2. Fetch Financial Entries
-    const { data: financials } = await adminSupabase
-        .from('financial_entries')
-        .select('*')
-        .gte('created_at', startIso)
-
-    // 3. Fetch Interaction Logs
-    const { data: interactions } = await adminSupabase
-        .from('interaction_logs')
-        .select('*')
-        .gte('created_at', startIso)
-
-    // Aggregations
-    const totalVisits = events?.filter(e => e.event_type === 'page_view').length || 0
-    const whatsappClicks = events?.filter(e => e.event_type === 'click_whatsapp').length || 0
-    const callClicks = events?.filter(e => e.event_type === 'click_call').length || 0
-    const totalRevenue = financials?.reduce((sum, f) => sum + f.amount, 0) || 0
-
-    // Traffic Sources
-    const sourcesMap: Record<string, number> = {}
-    events?.filter(e => e.event_type === 'page_view').forEach(e => {
-        const s = e.source || 'Direto'
-        sourcesMap[s] = (sourcesMap[s] || 0) + 1
-    })
-    const trafficSources = Object.entries(sourcesMap).map(([name, value]) => ({ name, value }))
-
-    // Trends (Daily)
-    const dailyMap: Record<string, { date: string, visits: number, revenue: number }> = {}
-    events?.filter(e => e.event_type === 'page_view').forEach(e => {
-        const d = new Date(e.created_at).toLocaleDateString()
-        if (!dailyMap[d]) dailyMap[d] = { date: d, visits: 0, revenue: 0 }
-        dailyMap[d].visits++
-    })
-    financials?.forEach(f => {
-        const d = new Date(f.created_at).toLocaleDateString()
-        if (!dailyMap[d]) dailyMap[d] = { date: d, visits: 0, revenue: 0 }
-        dailyMap[d].revenue += f.amount
-    })
-
-    const trends = Object.values(dailyMap).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-
-    return {
-        stats: {
-            totalVisits,
-            whatsappClicks,
-            callClicks,
-            totalRevenue,
-            trafficSources,
-            trends,
-            funnel: [
-                { name: 'Visitas', value: totalVisits },
-                { name: 'Contactos', value: whatsappClicks + callClicks },
-                { name: 'Vendas/Ganhos', value: financials?.length || 0 }
-            ]
+        if (range === 'today') {
+            startDate = new Date(now.setHours(0, 0, 0, 0))
+        } else if (range === '7d') {
+            startDate = new Date(now.setDate(now.getDate() - 7))
+        } else if (range === '30d') {
+            startDate = new Date(now.setDate(now.getDate() - 30))
         }
+
+        const startIso = startDate.toISOString()
+
+        // 1. Fetch Analytics Events
+        const { data: events } = await adminSupabase
+            .from('analytics_events')
+            .select('*')
+            .gte('created_at', startIso)
+
+        // 2. Fetch Financial Entries
+        const { data: financials } = await adminSupabase
+            .from('financial_entries')
+            .select('*')
+            .gte('created_at', startIso)
+
+        // 3. Fetch Interaction Logs
+        const { data: interactions } = await adminSupabase
+            .from('interaction_logs')
+            .select('*')
+            .gte('created_at', startIso)
+
+        // Aggregations
+        const totalVisits = events?.filter(e => e.event_type === 'page_view').length || 0
+        const whatsappClicks = events?.filter(e => e.event_type === 'click_whatsapp').length || 0
+        const callClicks = events?.filter(e => e.event_type === 'click_call').length || 0
+        const totalRevenue = financials?.reduce((sum, f) => sum + f.amount, 0) || 0
+
+        // Traffic Sources
+        const sourcesMap: Record<string, number> = {}
+        events?.filter(e => e.event_type === 'page_view').forEach(e => {
+            const s = e.source || 'Direto'
+            sourcesMap[s] = (sourcesMap[s] || 0) + 1
+        })
+        const trafficSources = Object.entries(sourcesMap).map(([name, value]) => ({ name, value }))
+
+        // Trends (Daily)
+        const dailyMap: Record<string, { date: string, visits: number, revenue: number }> = {}
+        events?.filter(e => e.event_type === 'page_view').forEach(e => {
+            const d = new Date(e.created_at).toLocaleDateString()
+            if (!dailyMap[d]) dailyMap[d] = { date: d, visits: 0, revenue: 0 }
+            dailyMap[d].visits++
+        })
+        financials?.forEach(f => {
+            const d = new Date(f.created_at).toLocaleDateString()
+            if (!dailyMap[d]) dailyMap[d] = { date: d, visits: 0, revenue: 0 }
+            dailyMap[d].revenue += f.amount
+        })
+
+        const trends = Object.values(dailyMap).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+        return {
+            stats: {
+                totalVisits,
+                whatsappClicks,
+                callClicks,
+                totalRevenue,
+                trafficSources,
+                trends,
+                funnel: [
+                    { name: 'Visitas', value: totalVisits },
+                    { name: 'Contactos', value: whatsappClicks + callClicks },
+                    { name: 'Vendas/Ganhos', value: financials?.length || 0 }
+                ]
+            }
+        }
+    } catch (err: any) {
+        console.error('Error in getDashboardStats:', err)
+        return { error: 'Falha ao carregar estatísticas: ' + (err.message || 'Erro desconhecido') }
     }
 }

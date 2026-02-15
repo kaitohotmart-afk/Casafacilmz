@@ -42,7 +42,7 @@ export default function NewPropertyPage() {
                 marginBottom: '2rem'
             }}>
                 <p style={{ marginBottom: '0.5rem' }}>💡 <strong>Regra de Ouro:</strong> Apenas anúncios directos dos proprietários ou autorizados.</p>
-                <p>Taxa de visita fixa: <strong>150 MZN</strong>. Comissão: <strong>10% (Venda) / 1 Mês (Aluguel)</strong>.</p>
+                <p>Taxa de visita fixa: <strong>300 MZN</strong>. Comissão: <strong>10% (Venda) / 1 Mês (Aluguel)</strong>.</p>
             </div>
 
             <PropertyForm

@@ -145,7 +145,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                             }}>
                                 <p style={{ fontWeight: 700, marginBottom: '0.75rem', color: 'var(--pk-brand-secondary)' }}>Termos e Taxas:</p>
                                 <ul style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: 'rgba(255,255,255,0.8)' }}>
-                                    <li>Visita: <strong>150 MZN</strong> (taxa para transporte e evitar curiosos)</li>
+                                    <li>Visita: <strong>300 MZN</strong> (taxa para transporte e evitar curiosos)</li>
                                     <li>Segurança: <strong>Trabalhamos directos com donos</strong></li>
                                 </ul>
                             </div>

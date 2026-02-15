@@ -39,23 +39,31 @@ export default async function DashboardPage({ searchParams }: Props) {
     // If Admin, fetch stats and users
     let adminStats = null
     let allUsers: any[] = []
+    let adminError = null
 
     if (isAdmin) {
-        const statsRes = await getDashboardStats(range)
-        adminStats = statsRes.stats
+        try {
+            const statsRes = await getDashboardStats(range)
+            if (statsRes.error) throw new Error(statsRes.error)
+            adminStats = statsRes.stats
 
-        const usersRes = await getUsers()
-        allUsers = usersRes.users || []
+            const usersRes = await getUsers()
+            if (usersRes.error) throw new Error(usersRes.error)
+            allUsers = usersRes.users || []
 
-        // Add some basic counts that aren't range-bound for the overview
-        const { count: totalProperties } = await supabase.from('properties').select('*', { count: 'exact', head: true })
-        const { count: activeProperties } = await supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'available')
+            // Add some basic counts that aren't range-bound for the overview
+            const { count: totalProperties } = await supabase.from('properties').select('*', { count: 'exact', head: true })
+            const { count: activeProperties } = await supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'available')
 
-        adminStats = {
-            ...adminStats,
-            totalProperties: totalProperties || 0,
-            activeProperties: activeProperties || 0,
-            totalUsers: allUsers.length
+            adminStats = {
+                ...adminStats,
+                totalProperties: totalProperties || 0,
+                activeProperties: activeProperties || 0,
+                totalUsers: allUsers.length
+            }
+        } catch (err: any) {
+            console.error('Fatal error loading admin dashboard:', err)
+            adminError = err.message
         }
     }
 
@@ -77,6 +85,21 @@ export default async function DashboardPage({ searchParams }: Props) {
     }
 
     if (isAdmin) {
+        if (adminError) {
+            return (
+                <div style={{ padding: '4rem 1rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+                    <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '2.5rem', borderRadius: '1rem', color: '#991B1B' }}>
+                        <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 800 }}>⚠️ Configuração Necessária</h1>
+                        <p style={{ marginBottom: '1.5rem', lineHeight: 1.6 }}>Ocorreu um erro ao carregar o dashboard administrativo. Isso geralmente acontece por falta de configuração no servidor.</p>
+                        <div style={{ background: 'white', padding: '1rem', borderRadius: '0.5rem', textAlign: 'left', fontSize: '0.9rem', marginBottom: '1.5rem', border: '1px solid #FECACA' }}>
+                            <strong>Detalhe técnico:</strong><br />
+                            <code>{adminError}</code>
+                        </div>
+                        <p style={{ fontSize: '0.875rem', opacity: 0.8 }}>Por favor, adicione a <code>SUPABASE_SERVICE_ROLE_KEY</code> nas variáveis de ambiente do projeto para resolver este erro.</p>
+                    </div>
+                </div>
+            )
+        }
         return <AdminDashboard
             properties={properties || []}
             stats={adminStats}

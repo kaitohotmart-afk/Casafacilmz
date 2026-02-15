@@ -39,7 +39,7 @@ export default function TermsPage() {
                 <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginBottom: '1rem' }}>
                     <li><strong>Venda:</strong> 10% de comissão</li>
                     <li><strong>Aluguel:</strong> 1 mês de comissão</li>
-                    <li><strong>Visita presencial:</strong> 150 MZN</li>
+                    <li><strong>Visita presencial:</strong> 300 MZN</li>
                 </ul>
                 <p>As taxas são fixas e não negociáveis.</p>
             </section>

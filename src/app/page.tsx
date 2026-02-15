@@ -188,9 +188,9 @@ export default async function Home() {
 
             <div style={{ background: 'white', padding: '3rem 2.5rem', borderRadius: 'var(--pk-radius-2xl)', boxShadow: 'var(--pk-shadow-lg)', border: '1px solid var(--pk-surface-100)' }}>
               <div style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>💰</div>
-              <h3 style={{ fontSize: '1.5rem', color: 'var(--pk-brand-primary)', fontWeight: 700, marginBottom: '1rem' }}>Visitas Agendadas (150 MZN)</h3>
+              <h3 style={{ fontSize: '1.5rem', color: 'var(--pk-brand-primary)', fontWeight: 700, marginBottom: '1rem' }}>Visitas Agendadas (300 MZN)</h3>
               <p style={{ color: 'var(--pk-text-secondary)', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                Cobramos uma taxa fixa de <strong>150 MZN por visita</strong>. Este valor cobre os nossos custos de <strong>transporte</strong> e serve para <strong>evitar curiosos</strong>, garantindo que apenas clientes realmente interessados e prontos para fechar negócio visitem o seu imóvel.
+                Cobramos uma taxa fixa de <strong>300 MZN por visita</strong>. Este valor cobre os nossos custos de <strong>transporte</strong> e serve para <strong>evitar curiosos</strong>, garantindo que apenas clientes realmente interessados e prontos para fechar negócio visitem o seu imóvel.
               </p>
             </div>
 

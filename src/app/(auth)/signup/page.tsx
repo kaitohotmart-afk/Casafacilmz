@@ -28,7 +28,7 @@ export default function SignupPage() {
                 <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: '1.25rem' }}>
                     <li><strong>Transparência:</strong> O Casa Fácil MZ não aceita anúncios de terceiros sem autorização do proprietário.</li>
                     <li><strong>Segurança:</strong> Trabalhamos diretamente com os donos para garantir a veracidade dos imóveis.</li>
-                    <li><strong>Taxa de Visita:</strong> Cobramos <strong>150 MZN</strong> por cada visita agendada.</li>
+                    <li><strong>Taxa de Visita:</strong> Cobramos <strong>300 MZN</strong> por cada visita agendada.</li>
                     <li><strong>Comissão:</strong> Cobramos <strong>10%</strong> em vendas e <strong>1 mês</strong> em aluguéis após o fecho.</li>
                 </ul>
             </div>
