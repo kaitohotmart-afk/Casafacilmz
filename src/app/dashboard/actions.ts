@@ -120,11 +120,15 @@ export async function createProperty(arg1: any, arg2?: any) {
 }
 
 export async function updateProperty(propertyId: string, arg1: any, arg2?: any) {
+    console.log('--- updateProperty START ---', propertyId)
     let formData: FormData | null = null;
     if (arg2 instanceof FormData) formData = arg2;
     else if (arg1 instanceof FormData) formData = arg1;
 
-    if (!formData) return { error: 'Dados não recebidos.' }
+    if (!formData) {
+        console.error('updateProperty: No formData')
+        return { error: 'Dados não recebidos.' }
+    }
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -141,7 +145,6 @@ export async function updateProperty(propertyId: string, arg1: any, arg2?: any) 
         return { error: 'PROIBIDO: Não é permitido colocar números de telefone na descrição. Use apenas os campos oficiais de contacto.' }
     }
 
-    // Admin External Owner Fields
     const externalOwnerName = formData.get('externalOwnerName') as string
     const externalOwnerPhone = formData.get('externalOwnerPhone') as string
 
@@ -150,10 +153,16 @@ export async function updateProperty(propertyId: string, arg1: any, arg2?: any) 
 
     // Verify ownership or admin
     const { data: existingProp } = await supabase.from('properties').select('owner_id').eq('id', propertyId).single()
-    if (!existingProp || (existingProp.owner_id !== user.id && !isAdmin)) {
-        return { error: 'Acesso negado ou imóvel não encontrado.' }
+    if (!existingProp) {
+        return { error: 'Imóvel não encontrado.' }
     }
 
+    const isOwner = existingProp.owner_id === user.id
+    if (!isOwner && !isAdmin) {
+        return { error: 'Acesso negado.' }
+    }
+
+    // Prepare update data
     const updateData: any = {
         title,
         description,
@@ -168,31 +177,76 @@ export async function updateProperty(propertyId: string, arg1: any, arg2?: any) 
         updateData.external_owner_phone = externalOwnerPhone || null
     }
 
-    const { error: propError } = await supabase
-        .from('properties')
-        .update(updateData)
-        .eq('id', propertyId)
+    try {
+        // Use Admin Client if it's an admin editing another person's property, 
+        // OR always use Admin Client for consistency if we have the key.
+        // Let's use creatingAdminClient if possible for these operations to avoid RLS headaches in production.
+        const useAdmin = isAdmin || !isOwner // though owners should be fine, let's be safe.
+        const activeClient = useAdmin ? await createAdminClient() : supabase
 
-    if (propError) return { error: 'Erro ao atualizar: ' + propError.message }
+        console.log(`updateProperty: Updating property row (Admin: ${useAdmin})`)
+        const { error: propError } = await activeClient
+            .from('properties')
+            .update(updateData)
+            .eq('id', propertyId)
 
-    // Update Images if provided (simplified: replace all if new ones provided, or just keep same if empty)
-    const imageUrls = formData.getAll('imageUrls') as string[]
-    if (imageUrls.length > 0) {
-        // Delete old images
-        await supabase.from('property_images').delete().eq('property_id', propertyId)
+        if (propError) {
+            console.error('updateProperty: Error updating property row:', propError)
+            return { error: 'Erro ao atualizar dados: ' + propError.message }
+        }
 
-        // Insert new ones
-        const imageInserts = imageUrls.map((url, index) => ({
-            property_id: propertyId,
-            image_url: url,
-            display_order: index
-        }))
-        await supabase.from('property_images').insert(imageInserts)
+        // --- Image Sync Logic ---
+        const imageUrls = formData.getAll('imageUrls') as string[]
+        console.log(`updateProperty: Image Sync. New count: ${imageUrls.length}`)
+
+        if (imageUrls.length > 0) {
+            // 1. Delete old images
+            console.log('updateProperty: Deleting old images...')
+            const { error: delError } = await activeClient
+                .from('property_images')
+                .delete()
+                .eq('property_id', propertyId)
+
+            if (delError) {
+                console.error('updateProperty: Error deleting old images:', delError)
+                // We keep going? No, better warn.
+                return { error: 'Erro ao limpar imagens antigas: ' + delError.message }
+            }
+
+            // 2. Insert new ones
+            const imageInserts = imageUrls.map((url, index) => ({
+                property_id: propertyId,
+                image_url: url,
+                display_order: index
+            }))
+
+            console.log('updateProperty: Inserting new images...')
+            const { error: insError } = await activeClient
+                .from('property_images')
+                .insert(imageInserts)
+
+            if (insError) {
+                console.error('updateProperty: Error inserting new images:', insError)
+                return { error: 'Erro ao salvar novas imagens: ' + insError.message }
+            }
+        } else {
+            console.log('updateProperty: No images sent in formData, keeping/removing all?')
+            // If the form sends nothing, it usually means images were cleared. 
+            // But PropertyForm ALWAYS sends hidden inputs for existing/new images.
+            // If we get 0, it means the user deleted all images or there's a bug.
+            // Let's be cautious.
+        }
+
+        console.log('updateProperty: SUCCESS')
+        revalidatePath('/dashboard')
+        revalidatePath(`/properties/${propertyId}`)
+        revalidatePath('/')
+        redirect('/dashboard')
+    } catch (e: any) {
+        if (e.message?.includes('NEXT_REDIRECT')) throw e; // Handle Next.js redirect
+        console.error('updateProperty: FATAL ERROR:', e)
+        return { error: 'Erro fatal na atualização: ' + e.message }
     }
-
-    revalidatePath('/dashboard')
-    revalidatePath(`/properties/${propertyId}`)
-    redirect('/dashboard')
 }
 
 export async function deleteProperty(propertyId: string) {
