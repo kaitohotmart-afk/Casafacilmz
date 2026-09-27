@@ -2,9 +2,10 @@
 
 import { Share2 } from 'lucide-react'
 
-export default function ShareButton({ title, text, url }: { title: string, text: string, url: string }) {
+export default function ShareButton({ title, text, url, buttonText = "Partilhar" }: { title: string, text: string, url: string, buttonText?: string }) {
     const handleShare = async () => {
-        const fullUrl = `${window.location.origin}${url}`
+        // If url is already an absolute URL, use it, otherwise prepend origin
+        const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`
 
         if (navigator.share) {
             try {
@@ -38,12 +39,12 @@ export default function ShareButton({ title, text, url }: { title: string, text:
                 border: 'none', 
                 cursor: 'pointer',
                 boxShadow: '0 4px 12px rgba(17, 24, 39, 0.2)',
-                marginTop: '2rem',
+                marginTop: '1rem',
                 fontSize: '1rem'
             }}
         >
             <Share2 size={20} />
-            Partilhar esta Dica
+            {buttonText}
         </button>
     )
 }

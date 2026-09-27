@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import PropertyImageGallery from '@/components/PropertyImageGallery'
 import ContactButtons from '@/components/ContactButtons'
+import ShareButton from '@/components/ShareButton'
 import { formatCurrency } from '@/utils/format'
 
 import type { Metadata, ResolvingMetadata } from 'next'
@@ -60,8 +61,8 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     // Define WhatsApp message and links
     const whatsappNumber = '877771719'
     const callNumber = '+258 86 744 3081'
-    const propertyUrl = `https://casafacil.co.mz/properties/${property.id}`
-    const whatsappText = `Olá, vim pelo site Casa Fácil MZ e tenho interesse no imóvel: ${property.title} (${property.location_district}).\nVeja o imóvel aqui: ${propertyUrl}`
+    const propertyUrl = `https://www.casafacilmz.shop/properties/${property.id}`
+    const whatsappText = `${propertyUrl}\n\nOlá, vim pelo site Casa Fácil MZ e tenho interesse no imóvel: ${property.title} (${property.location_district}).`
     const whatsappLink = `https://wa.me/258${whatsappNumber}?text=${encodeURIComponent(whatsappText)}`
 
     return (
@@ -116,8 +117,16 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                             )}
                         </div>
                     </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--pk-brand-secondary)' }}>
-                        {formatCurrency(property.price)}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--pk-brand-secondary)' }}>
+                            {formatCurrency(property.price)}
+                        </div>
+                        <ShareButton 
+                            title={`Casa Fácil MZ - ${property.title}`} 
+                            text={`Confira este imóvel: ${property.title} em ${property.location_district}`} 
+                            url={`/properties/${property.id}`} 
+                            buttonText="Partilhar Imóvel" 
+                        />
                     </div>
                 </div>
 
