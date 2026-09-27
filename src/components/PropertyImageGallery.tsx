@@ -37,6 +37,7 @@ export default function PropertyImageGallery({ images, title }: PropertyImageGal
                 overflow: 'hidden',
                 boxShadow: 'var(--pk-shadow-lg)',
                 background: 'var(--pk-surface-50)'
+            }}>
                 <Image
                     src={images[activeIndex].image_url}
                     alt={`${title} - Visualização ${activeIndex + 1}`}
