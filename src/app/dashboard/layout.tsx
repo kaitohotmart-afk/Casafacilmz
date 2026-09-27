@@ -29,7 +29,7 @@ export default async function DashboardLayout({
                         Casa Fácil MZ
                     </Link>
                     <nav style={{ display: 'flex', gap: '1rem' }}>
-                        <Link href="/dashboard" style={{ fontWeight: 500 }}>Meus Imóveis</Link>
+                        <Link href="/dashboard" style={{ fontWeight: 500, color: 'var(--pk-brand-secondary)' }}>Painel de Administração</Link>
                     </nav>
                 </div>
 

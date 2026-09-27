@@ -61,8 +61,11 @@ export async function createProperty(arg1: any, arg2?: any) {
 
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role === 'admin') {
-        if (externalOwnerName) finalExternalName = externalOwnerName
-        if (externalOwnerPhone) finalExternalPhone = externalOwnerPhone
+        if (!externalOwnerName || !externalOwnerPhone) {
+            return { error: 'Nome e Telefone do proprietário são obrigatórios.' }
+        }
+        finalExternalName = externalOwnerName
+        finalExternalPhone = externalOwnerPhone
     }
 
     // Images are passed as hidden fields or separate argument?
@@ -173,8 +176,11 @@ export async function updateProperty(propertyId: string, arg1: any, arg2?: any) 
     }
 
     if (isAdmin) {
-        updateData.external_owner_name = externalOwnerName || null
-        updateData.external_owner_phone = externalOwnerPhone || null
+        if (!externalOwnerName || !externalOwnerPhone) {
+            return { error: 'Nome e Telefone do proprietário são obrigatórios.' }
+        }
+        updateData.external_owner_name = externalOwnerName
+        updateData.external_owner_phone = externalOwnerPhone
     }
 
     try {
@@ -285,42 +291,21 @@ export async function deleteProperty(propertyId: string) {
 
         const adminSupabase = await createAdminClient()
 
-        console.log('deleteProperty: Deleting images for prop:', propertyId)
-        const { count: imgCount, error: err1 } = await adminSupabase
-            .from('property_images')
-            .delete({ count: 'exact' })
-            .eq('property_id', propertyId)
-        console.log(`deleteProperty: Removed ${imgCount} images. Error:`, err1)
-
-        console.log('deleteProperty: Deleting interaction logs...')
-        const { count: logCount, error: err2 } = await adminSupabase
-            .from('interaction_logs')
-            .delete({ count: 'exact' })
-            .eq('property_id', propertyId)
-        console.log(`deleteProperty: Removed ${logCount} logs. Error:`, err2)
-
-        console.log('deleteProperty: Deleting financial entries...')
-        const { count: finCount, error: err3 } = await adminSupabase
-            .from('financial_entries')
-            .delete({ count: 'exact' })
-            .eq('property_id', propertyId)
-        console.log(`deleteProperty: Removed ${finCount} financial entries. Error:`, err3)
-
-        console.log('deleteProperty: Finally deleting property row...')
+        console.log('deleteProperty: Soft deleting property row...')
         const { count: propCount, error: propError } = await adminSupabase
             .from('properties')
-            .delete({ count: 'exact' })
+            .update({ is_deleted: true, status: 'archived' })
             .eq('id', propertyId)
 
         if (propError) {
-            console.error('Error deleting property row:', propError)
-            return { error: 'Erro no banco de dados ao remover imóvel: ' + propError.message }
+            console.error('Error soft deleting property row:', propError)
+            return { error: 'Erro no banco de dados ao arquivar imóvel: ' + propError.message }
         }
 
-        console.log(`deleteProperty: Removed ${propCount} property rows.`)
+        console.log(`deleteProperty: Archived ${propCount} property rows.`)
 
         if (propCount === 0) {
-            return { error: 'O imóvel não foi encontrado ou já foi removido.' }
+            return { error: 'O imóvel não foi encontrado ou já foi arquivado.' }
         }
 
         console.log('deleteProperty: SUCCESS')
@@ -433,15 +418,8 @@ export async function getUsers() {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'admin') return { error: 'Não autorizado' }
 
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceRoleKey) {
-        console.error('ERROR: SUPABASE_SERVICE_ROLE_KEY is missing')
-        return { error: 'Configuração do servidor incompleta (Service Role missing)' }
-    }
-
     try {
-        const adminSupabase = await createAdminClient()
-        const { data: users, error } = await adminSupabase
+        const { data: users, error } = await supabase
             .from('profiles')
             .select('*')
             .order('updated_at', { ascending: false })
@@ -462,14 +440,7 @@ export async function getDashboardStats(range: 'today' | '7d' | '30d' | 'all' = 
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'admin') return { error: 'Não autorizado' }
 
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceRoleKey) {
-        console.error('ERROR: SUPABASE_SERVICE_ROLE_KEY is missing')
-        return { error: 'Configuração do servidor incompleta (Service Role missing)' }
-    }
-
     try {
-        const adminSupabase = await createAdminClient()
 
         const now = new Date()
         let startDate = new Date(0) // Default to all time
@@ -485,19 +456,19 @@ export async function getDashboardStats(range: 'today' | '7d' | '30d' | 'all' = 
         const startIso = startDate.toISOString()
 
         // 1. Fetch Analytics Events
-        const { data: events } = await adminSupabase
+        const { data: events } = await supabase
             .from('analytics_events')
             .select('*')
             .gte('created_at', startIso)
 
         // 2. Fetch Financial Entries
-        const { data: financials } = await adminSupabase
+        const { data: financials } = await supabase
             .from('financial_entries')
             .select('*')
             .gte('created_at', startIso)
 
         // 3. Fetch Interaction Logs
-        const { data: interactions } = await adminSupabase
+        const { data: interactions } = await supabase
             .from('interaction_logs')
             .select('*')
             .gte('created_at', startIso)
@@ -550,4 +521,36 @@ export async function getDashboardStats(range: 'today' | '7d' | '30d' | 'all' = 
         console.error('Error in getDashboardStats:', err)
         return { error: 'Falha ao carregar estatísticas: ' + (err.message || 'Erro desconhecido') }
     }
+}
+
+export async function createBlogPost(formData: FormData) {
+    const title = formData.get('title') as string
+    const image_url = formData.get('image_url') as string
+    const content = formData.get('content') as string
+
+    if (!title || !content) return { error: 'O título e conteúdo são obrigatórios.' }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Não autenticado' }
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (profile?.role !== 'admin') return { error: 'Não autorizado' }
+
+    const slug = title
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '')
+
+    const { error } = await supabase.from('blogs').insert({
+        title,
+        slug,
+        content,
+        image_url: image_url || null,
+        author_id: user.id
+    })
+
+    if (error) return { error: error.message }
+    return { success: true }
 }

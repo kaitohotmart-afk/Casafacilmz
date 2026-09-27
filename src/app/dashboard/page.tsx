@@ -108,5 +108,10 @@ export default async function DashboardPage({ searchParams }: Props) {
         />
     }
 
-    return <OwnerDashboard properties={properties || []} profile={profile} stats={propertyStats} />
+    return (
+        <div style={{ textAlign: 'center', padding: '6rem 1rem' }}>
+            <h1 style={{ fontSize: '2rem', color: 'var(--pk-danger)', marginBottom: '1rem' }}>Acesso Negado</h1>
+            <p style={{ color: 'var(--pk-text-secondary)' }}>Esta área é reservada apenas para Administradores da Casa Fácil MZ.</p>
+        </div>
+    )
 }

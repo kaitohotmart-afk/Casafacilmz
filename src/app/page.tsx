@@ -102,6 +102,22 @@ export default async function Home() {
                   style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--pk-surface-200)', borderRadius: 'var(--pk-radius-md)', fontWeight: 500 }}
                 />
               </div>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <input
+                  name="minPrice"
+                  type="number"
+                  placeholder="Preço Min (MZN)"
+                  style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--pk-surface-200)', borderRadius: 'var(--pk-radius-md)', fontWeight: 500 }}
+                />
+              </div>
+              <div style={{ flex: 1, minWidth: '120px' }}>
+                <input
+                  name="maxPrice"
+                  type="number"
+                  placeholder="Preço Máx (MZN)"
+                  style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--pk-surface-200)', borderRadius: 'var(--pk-radius-md)', fontWeight: 500 }}
+                />
+              </div>
               <button type="submit" className="btn btn-primary" style={{ padding: '0 2.5rem', fontWeight: 700 }}>
                 Procurar
               </button>
@@ -155,8 +171,8 @@ export default async function Home() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2.5rem' }}>
-          {properties?.map((property: any) => (
-            <PropertyCard key={property.id} property={property} />
+          {properties?.map((property: any, i: number) => (
+            <PropertyCard key={property.id} property={property} index={i} />
           ))}
         </div>
 
@@ -223,9 +239,9 @@ export default async function Home() {
               Junte-se à maior e mais segura comunidade imobiliária de Tete. Publicação simples, rápida e com resultados reais.
             </p>
             <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/signup" className="btn btn-primary" style={{ background: 'var(--pk-brand-secondary)', padding: '1.5rem 4rem', fontSize: '1.2rem', borderRadius: 'var(--pk-radius-lg)', fontWeight: 700 }}>
+              <a href="https://wa.me/258877771719?text=Ol%C3%A1%2C%20gostaria%20de%20divulgar%20meu%20im%C3%B3vel%20no%20site%20Casa%20F%C3%A1cil%20MZ." target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ background: 'var(--pk-brand-secondary)', padding: '1.5rem 4rem', fontSize: '1.2rem', borderRadius: 'var(--pk-radius-lg)', fontWeight: 700 }}>
                 Anunciar Agora
-              </Link>
+              </a>
               <Link href="/contact" className="btn" style={{ border: '2px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', color: 'white', padding: '1.5rem 4rem', fontSize: '1.2rem', borderRadius: 'var(--pk-radius-lg)', fontWeight: 600 }}>
                 Falar Connosco
               </Link>

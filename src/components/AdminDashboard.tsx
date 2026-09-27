@@ -27,6 +27,25 @@ export default function AdminDashboard({ properties, stats, users, currentRange 
     const [isPending, startTransition] = useTransition()
     const [filter, setFilter] = useState('all')
     const [activeTab, setActiveTab] = useState('overview')
+    const [blogImageUrl, setBlogImageUrl] = useState('')
+    const [blogUploading, setBlogUploading] = useState(false)
+
+    const handleBlogImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return
+        setBlogUploading(true)
+        try {
+            const formData = new FormData()
+            formData.append('file', e.target.files[0])
+            const res = await fetch('/api/upload', { method: 'POST', body: formData })
+            if (!res.ok) throw new Error('Falha no upload')
+            const data = await res.json()
+            setBlogImageUrl(data.url)
+        } catch (err) {
+            alert('Erro ao carregar imagem')
+        } finally {
+            setBlogUploading(false)
+        }
+    }
 
     const statsConfig = [
         { title: 'Faturamento Total', value: formatCurrency(stats.totalRevenue), icon: Briefcase, color: '#10B981', trend: { value: 12, label: 'vs anterior' } },
@@ -40,7 +59,7 @@ export default function AdminDashboard({ properties, stats, users, currentRange 
     }
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Remover imóvel definitivamente?')) return
+        if (!confirm('Arquivar este imóvel? Ele não será mais visível publicamente.')) return
         startTransition(async () => {
             const res = await deleteProperty(id)
             if (res.error) alert(res.error)
@@ -98,13 +117,13 @@ export default function AdminDashboard({ properties, stats, users, currentRange 
 
                 {/* Tabs */}
                 <div className="dashboard-tabs">
-                    {['overview', 'properties', 'users'].map((tab) => (
+                    {['overview', 'properties', 'users', 'blog'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
                         >
-                            {tab === 'overview' ? 'Visão Geral' : tab === 'properties' ? 'Imóveis' : 'Utilizadores'}
+                            {tab === 'overview' ? 'Visão Geral' : tab === 'properties' ? 'Imóveis' : tab === 'users' ? 'Utilizadores' : 'Blog (Dicas)'}
                         </button>
                     ))}
                 </div>
@@ -158,7 +177,7 @@ export default function AdminDashboard({ properties, stats, users, currentRange 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Gestão de Listagens</h2>
                             <div style={{ display: 'flex', gap: '0.5rem', background: 'white', padding: '0.25rem', borderRadius: 'var(--pk-radius-md)', border: '1px solid var(--pk-surface-100)' }}>
-                                {['all', 'available', 'sold'].map((f) => (
+                                {['all', 'available', 'sold', 'archived', 'draft'].map((f) => (
                                     <button
                                         key={f}
                                         onClick={() => setFilter(f)}
@@ -174,7 +193,7 @@ export default function AdminDashboard({ properties, stats, users, currentRange 
                                             transition: 'all 0.2s'
                                         }}
                                     >
-                                        {f === 'all' ? 'Todos' : f === 'available' ? 'Disponíveis' : 'Vendidos'}
+                                        {f === 'all' ? 'Todos' : f === 'available' ? 'Disponíveis' : f === 'sold' ? 'Vendidos' : f === 'archived' ? 'Arquivados' : 'Rascunhos'}
                                     </button>
                                 ))}
                             </div>
@@ -209,8 +228,8 @@ export default function AdminDashboard({ properties, stats, users, currentRange 
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--pk-text-tertiary)' }}>{p.external_owner_phone || p.profiles?.phone || 'Sem contacto'}</div>
                                             </td>
                                             <td>
-                                                <span className={`status-badge ${p.status === 'available' ? 'status-available' : 'status-sold'}`}>
-                                                    {p.status === 'available' ? 'Disponível' : 'Vendido'}
+                                                <span className={`status-badge ${p.status === 'available' ? 'status-available' : p.status === 'draft' ? 'status-draft' : 'status-sold'}`}>
+                                                    {p.status === 'available' ? 'Disponível' : p.status === 'draft' ? 'Rascunho' : 'Vendido/Arquivado'}
                                                 </span>
                                             </td>
                                             <td>
@@ -237,6 +256,52 @@ export default function AdminDashboard({ properties, stats, users, currentRange 
                 {activeTab === 'users' && (
                     <div style={{ animation: 'fade-in 0.5s ease' }}>
                         <UserManagementTable users={users} />
+                    </div>
+                )}
+
+                {activeTab === 'blog' && (
+                    <div style={{ animation: 'fade-in 0.5s ease', maxWidth: '800px' }}>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem' }}>Criar Novo Artigo / Dica</h2>
+                        <form action={async (formData) => {
+                            const { createBlogPost } = await import('@/app/dashboard/actions')
+                            if (blogImageUrl) formData.set('image_url', blogImageUrl)
+                            const res = await createBlogPost(formData)
+                            if (res.error) alert(res.error)
+                            else {
+                                alert('Artigo publicado com sucesso!')
+                                setBlogImageUrl('')
+                                router.refresh()
+                            }
+                        }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'white', padding: '2.5rem', borderRadius: '1rem', border: '1px solid var(--pk-surface-200)', boxShadow: 'var(--pk-shadow-sm)' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontWeight: 600, color: 'var(--pk-text-primary)' }}>Título do Artigo</label>
+                                <input name="title" required placeholder="Ex: 5 Dicas para Arrendar Casa" style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--pk-surface-200)', fontSize: '1rem', width: '100%' }} />
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontWeight: 600, color: 'var(--pk-text-primary)' }}>Imagem de Capa</label>
+                                {blogImageUrl ? (
+                                    <div style={{ position: 'relative', width: '100%', height: '200px', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                                        <img src={blogImageUrl} alt="Capa" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <button type="button" onClick={() => setBlogImageUrl('')} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: 'var(--pk-danger)', color: 'white', border: 'none', borderRadius: '0.5rem', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: 600 }}>Remover Imagem</button>
+                                        <input type="hidden" name="image_url" value={blogImageUrl} />
+                                    </div>
+                                ) : (
+                                    <div style={{ border: '2px dashed var(--pk-brand-primary)', borderRadius: '0.5rem', padding: '2rem', textAlign: 'center', background: 'var(--pk-surface-100)', cursor: 'pointer' }} onClick={() => document.getElementById('blog-image-upload')?.click()}>
+                                        <input type="file" id="blog-image-upload" accept="image/*" style={{ display: 'none' }} onChange={handleBlogImageUpload} />
+                                        <p style={{ color: 'var(--pk-brand-primary)', fontWeight: 600, margin: 0 }}>
+                                            {blogUploading ? 'A carregar imagem...' : 'Clique para enviar uma foto do seu telemóvel/PC'}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontWeight: 600, color: 'var(--pk-text-primary)' }}>Conteúdo (Use emojis e quebras de linha livremente)</label>
+                                <textarea name="content" required placeholder="Escreva o seu artigo aqui..." rows={12} style={{ padding: '1rem', borderRadius: '0.5rem', border: '1px solid var(--pk-surface-200)', fontSize: '1rem', width: '100%', resize: 'vertical', fontFamily: 'inherit' }}></textarea>
+                            </div>
+                            <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start', padding: '0.75rem 2rem', fontSize: '1.1rem' }}>Publicar Artigo</button>
+                        </form>
                     </div>
                 )}
             </main>

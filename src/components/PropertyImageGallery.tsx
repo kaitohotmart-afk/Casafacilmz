@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 
 interface PropertyImageGalleryProps {
     images: { image_url: string; id: string }[]
@@ -36,13 +37,11 @@ export default function PropertyImageGallery({ images, title }: PropertyImageGal
                 overflow: 'hidden',
                 boxShadow: 'var(--pk-shadow-lg)',
                 background: 'var(--pk-surface-50)'
-            }}>
-                <img
+                <Image
                     src={images[activeIndex].image_url}
                     alt={`${title} - Visualização ${activeIndex + 1}`}
+                    fill
                     style={{
-                        width: '100%',
-                        height: '100%',
                         objectFit: 'cover',
                         transition: 'opacity 0.3s ease'
                     }}
@@ -125,11 +124,14 @@ export default function PropertyImageGallery({ images, title }: PropertyImageGal
                                 opacity: idx === activeIndex ? 1 : 0.6
                             }}
                         >
-                            <img
-                                src={img.image_url}
-                                alt={`Thumbnail ${idx + 1}`}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
+                            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                                <Image
+                                    src={img.image_url}
+                                    alt={`Thumbnail ${idx + 1}`}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                />
+                            </div>
                         </button>
                     ))}
                 </div>

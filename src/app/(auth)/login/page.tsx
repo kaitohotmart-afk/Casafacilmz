@@ -51,10 +51,10 @@ export default function LoginPage() {
             </form>
 
             <div style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--pk-text-secondary)' }}>
-                <p>Ainda não tem conta?</p>
-                <Link href="/signup" style={{ color: 'var(--pk-brand-primary)', fontWeight: 500 }}>
-                    Criar conta de proprietário
-                </Link>
+                <p>Quer anunciar o seu imóvel?</p>
+                <a href="https://wa.me/258877771719?text=Ol%C3%A1%2C%20gostaria%20de%20divulgar%20meu%20im%C3%B3vel%20no%20site%20Casa%20F%C3%A1cil%20MZ." target="_blank" rel="noopener noreferrer" style={{ color: 'var(--pk-brand-primary)', fontWeight: 500 }}>
+                    Fale com o Administrador
+                </a>
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '1rem' }}>

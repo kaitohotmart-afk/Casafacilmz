@@ -60,7 +60,9 @@ export default function PropertyForm({ initialData, onSubmit, isAdmin, error }: 
                 }
 
                 const data = await res.json()
-                newUrls.push(data.secure_url)
+                // Inject watermark transformation into the URL
+                const watermarkedUrl = data.secure_url.replace('/upload/', '/upload/l_text:Arial_40_bold:Casa%20Facil%20MZ,co_white,g_south_east,x_20,y_20/')
+                newUrls.push(watermarkedUrl)
             }
             setImageUrls(prev => [...prev, ...newUrls])
         } catch (err: any) {
@@ -82,15 +84,15 @@ export default function PropertyForm({ initialData, onSubmit, isAdmin, error }: 
             {isAdmin && (
                 <div style={{ background: '#F0F9FF', padding: '1rem', borderRadius: 'var(--pk-radius-sm)', border: '1px solid #BAE6FD', marginBottom: '0.5rem' }}>
                     <h3 style={{ fontSize: '1rem', color: '#0369A1', marginBottom: '0.75rem' }}>Admin: Proprietário Externo</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            <label htmlFor="externalOwnerName" style={{ fontWeight: 500, fontSize: '0.9rem' }}>Nome</label>
-                            <input id="externalOwnerName" name="externalOwnerName" type="text" defaultValue={initialData?.external_owner_name || ''} placeholder="Ex: João da Silva"
+                            <label htmlFor="externalOwnerName" style={{ fontWeight: 500, fontSize: '0.9rem' }}>Nome (Obrigatório)</label>
+                            <input id="externalOwnerName" name="externalOwnerName" type="text" required defaultValue={initialData?.external_owner_name || ''} placeholder="Ex: João da Silva"
                                 style={{ padding: '0.6rem', borderRadius: 'var(--pk-radius-sm)', border: '1px solid var(--pk-surface-200)' }} />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            <label htmlFor="externalOwnerPhone" style={{ fontWeight: 500, fontSize: '0.9rem' }}>Telefone</label>
-                            <input id="externalOwnerPhone" name="externalOwnerPhone" type="text" defaultValue={initialData?.external_owner_phone || ''} placeholder="Ex: +258 84..."
+                            <label htmlFor="externalOwnerPhone" style={{ fontWeight: 500, fontSize: '0.9rem' }}>Telefone do Dono (Obrigatório)</label>
+                            <input id="externalOwnerPhone" name="externalOwnerPhone" type="text" required defaultValue={initialData?.external_owner_phone || ''} placeholder="Ex: +258 84..."
                                 style={{ padding: '0.6rem', borderRadius: 'var(--pk-radius-sm)', border: '1px solid var(--pk-surface-200)' }} />
                         </div>
                     </div>
@@ -105,7 +107,7 @@ export default function PropertyForm({ initialData, onSubmit, isAdmin, error }: 
             </div>
 
             {/* Type & District */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <label htmlFor="type" style={{ fontWeight: 500 }}>Tipo de Negócio</label>
                     <select id="type" name="type" required defaultValue={initialData?.type || 'sale'} style={{ padding: '0.75rem', borderRadius: 'var(--pk-radius-sm)', border: '1px solid var(--pk-surface-200)', background: 'white' }}>
@@ -123,7 +125,7 @@ export default function PropertyForm({ initialData, onSubmit, isAdmin, error }: 
             </div>
 
             {/* Price & Status */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <label htmlFor="price" style={{ fontWeight: 500 }}>Preço (MZN)</label>
                     <input id="price" name="price" type="number" required defaultValue={initialData?.price || ''} placeholder="Ex: 5000000" min="0" step="1"
@@ -134,6 +136,7 @@ export default function PropertyForm({ initialData, onSubmit, isAdmin, error }: 
                     <select id="status" name="status" defaultValue={initialData?.status || 'available'} style={{ padding: '0.75rem', borderRadius: 'var(--pk-radius-sm)', border: '1px solid var(--pk-surface-200)', background: 'white' }}>
                         <option value="available">Disponível</option>
                         <option value="sold">Vendido / Alugado</option>
+                        <option value="draft">Rascunho (Oculto)</option>
                     </select>
                 </div>
             </div>
@@ -154,7 +157,26 @@ export default function PropertyForm({ initialData, onSubmit, isAdmin, error }: 
             {/* Images */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <label style={{ fontWeight: 500 }}>Fotos do Imóvel (Máx 8)</label>
-                <div style={{ padding: '1rem', border: '2px dashed var(--pk-surface-200)', borderRadius: 'var(--pk-radius-md)', textAlign: 'center' }}>
+                <div 
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!uploading && imageUrls.length < 8) {
+                            handleFileChange({ target: { files: e.dataTransfer.files } } as any);
+                        }
+                    }}
+                    style={{ 
+                        padding: '2rem 1rem', 
+                        border: '2px dashed var(--pk-surface-200)', 
+                        borderRadius: 'var(--pk-radius-md)', 
+                        textAlign: 'center',
+                        background: 'var(--pk-surface-50)',
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer'
+                    }}
+                    onClick={() => document.getElementById('file-upload')?.click()}
+                >
                     <input
                         type="file"
                         accept="image/*"
@@ -164,9 +186,13 @@ export default function PropertyForm({ initialData, onSubmit, isAdmin, error }: 
                         style={{ display: 'none' }}
                         id="file-upload"
                     />
-                    <label htmlFor="file-upload" style={{ cursor: 'pointer', color: 'var(--pk-brand-primary)', fontWeight: 500 }}>
-                        {uploading ? 'Enviando...' : 'Clique para adicionar fotos'}
-                    </label>
+                    <div style={{ pointerEvents: 'none' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--pk-brand-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 10px auto' }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <p style={{ color: 'var(--pk-brand-primary)', fontWeight: 600, margin: '0 0 4px 0' }}>
+                            {uploading ? 'Enviando fotos...' : 'Clique ou arraste fotos para aqui'}
+                        </p>
+                        <p style={{ color: 'var(--pk-text-tertiary)', fontSize: '0.8rem', margin: 0 }}>PNG, JPG até 5MB</p>
+                    </div>
                 </div>
 
                 {/* Image Previews */}

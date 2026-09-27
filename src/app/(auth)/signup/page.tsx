@@ -1,135 +1,40 @@
 'use client'
 
 import Link from 'next/link'
-import { signup } from '@/app/auth/actions'
-import { useActionState, useState } from 'react'
 
 export default function SignupPage() {
-    const [state, formAction, isPending] = useActionState(signup, null)
-    const [accepted, setAccepted] = useState(false)
-
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ textAlign: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'center' }}>
+            <div>
                 <h1 style={{ marginBottom: '0.5rem', color: 'var(--pk-brand-primary)' }}>Casa Fácil MZ</h1>
-                <p style={{ color: 'var(--pk-text-secondary)' }}>Crie sua conta e comece a divulgar</p>
+                <p style={{ color: 'var(--pk-text-secondary)' }}>Cadastro de novos imóveis</p>
             </div>
 
-            {/* Platform Rules & Fees */}
             <div style={{
                 background: '#FFF7ED',
                 border: '1px solid #FED7AA',
                 borderRadius: 'var(--pk-radius-md)',
-                padding: '1.25rem',
-                fontSize: '0.9rem',
+                padding: '2rem',
+                fontSize: '1rem',
                 color: '#9A3412'
             }}>
-                <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', color: '#7C2D12' }}>Informações Importantes:</h3>
-                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: '1.25rem' }}>
-                    <li><strong>Transparência:</strong> O Casa Fácil MZ não aceita anúncios de terceiros sem autorização do proprietário.</li>
-                    <li><strong>Segurança:</strong> Trabalhamos diretamente com os donos para garantir a veracidade dos imóveis.</li>
-                    <li><strong>Taxa de Visita:</strong> Cobramos <strong>300 MZN</strong> por cada visita agendada.</li>
-                    <li><strong>Comissão:</strong> Cobramos <strong>10%</strong> em vendas e <strong>1 mês</strong> em aluguéis após o fecho.</li>
-                </ul>
-            </div>
-
-            <form className="auth-form" action={formAction} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label htmlFor="fullName" style={{ fontSize: '0.9rem', fontWeight: 500 }}>Nome Completo</label>
-                    <input
-                        id="fullName"
-                        name="fullName"
-                        type="text"
-                        required
-                        style={{ padding: '0.75rem', borderRadius: 'var(--pk-radius-sm)', border: '1px solid var(--pk-surface-200)' }}
-                    />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label htmlFor="phone" style={{ fontSize: '0.9rem', fontWeight: 500 }}>Telefone / WhatsApp</label>
-                    <input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        required
-                        placeholder="+258 84 123 4567"
-                        style={{ padding: '0.75rem', borderRadius: 'var(--pk-radius-sm)', border: '1px solid var(--pk-surface-200)' }}
-                    />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label htmlFor="email" style={{ fontSize: '0.9rem', fontWeight: 500 }}>Email</label>
-                    <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        placeholder="seu@email.com"
-                        style={{ padding: '0.75rem', borderRadius: 'var(--pk-radius-sm)', border: '1px solid var(--pk-surface-200)' }}
-                    />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label htmlFor="password" style={{ fontSize: '0.9rem', fontWeight: 500 }}>Senha</label>
-                    <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        style={{ padding: '0.75rem', borderRadius: 'var(--pk-radius-sm)', border: '1px solid var(--pk-surface-200)' }}
-                    />
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.9rem' }}>
-                    <input
-                        id="acceptedTerms"
-                        name="acceptedTerms"
-                        type="checkbox"
-                        checked={accepted}
-                        onChange={(e) => setAccepted(e.target.checked)}
-                        required
-                        style={{ marginTop: '0.2rem' }}
-                    />
-                    <label htmlFor="acceptedTerms" style={{ color: 'var(--pk-text-secondary)', lineHeight: '1.4' }}>
-                        Li e concordo com os <Link href="/terms" target="_blank" style={{ color: 'var(--pk-brand-primary)', textDecoration: 'underline' }}>Termos de Uso</Link> e regras da plataforma. Declaro ser o dono direto dos imóveis que anunciarei.
-                    </label>
-                </div>
-
-                {state?.error && (
-                    <div style={{ padding: '0.75rem', background: '#FEF2F2', color: 'var(--pk-danger)', borderRadius: 'var(--pk-radius-sm)', fontSize: '0.9rem' }}>
-                        {state.error}
-                    </div>
-                )}
-                {state?.success && (
-                    <div style={{ padding: '0.75rem', background: '#ECFDF5', color: 'var(--pk-success)', borderRadius: 'var(--pk-radius-sm)', fontSize: '0.9rem' }}>
-                        {state.success}
-                    </div>
-                )}
-
-                <button
-                    type="submit"
-                    className="btn btn-primary"
-                    style={{
-                        marginTop: '0.5rem',
-                        opacity: accepted ? 1 : 0.6,
-                        cursor: accepted ? 'pointer' : 'not-allowed'
-                    }}
-                    disabled={isPending || !accepted}
-                >
-                    {isPending ? 'Criando Conta...' : 'Criar Conta'}
-                </button>
-            </form>
-
-            <div style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--pk-text-secondary)' }}>
-                <p>Já tem conta?</p>
-                <Link href="/login" style={{ color: 'var(--pk-brand-primary)', fontWeight: 500 }}>
-                    Fazer Login
-                </Link>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#7C2D12' }}>Atenção: Acesso Restrito</h3>
+                <p style={{ marginBottom: '1.5rem' }}>
+                    O cadastro autônomo de imóveis foi desativado para garantir a máxima qualidade e segurança para nossos clientes.
+                </p>
+                <p style={{ marginBottom: '1.5rem' }}>
+                    Se deseja anunciar seu imóvel, entre em contato diretamente com nossa equipe. Um administrador irá até o local para tirar fotos profissionais e publicar o anúncio no site.
+                </p>
+                
+                <a href="https://wa.me/258877771719?text=Ol%C3%A1%2C%20gostaria%20de%20divulgar%20meu%20im%C3%B3vel%20no%20site%20Casa%20F%C3%A1cil%20MZ." target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'inline-block', padding: '1rem 2rem' }}>
+                    Falar com Administrador
+                </a>
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <Link href="/login" style={{ color: 'var(--pk-brand-primary)', fontWeight: 500, display: 'block', marginBottom: '1rem' }}>
+                    Já sou administrador
+                </Link>
                 <Link href="/" style={{ fontSize: '0.85rem', color: 'var(--pk-text-tertiary)' }}>
                     ← Voltar ao site
                 </Link>

@@ -6,7 +6,34 @@ import PropertyImageGallery from '@/components/PropertyImageGallery'
 import ContactButtons from '@/components/ContactButtons'
 import { formatCurrency } from '@/utils/format'
 
+import type { Metadata, ResolvingMetadata } from 'next'
+
 export const revalidate = 60
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }, parent: ResolvingMetadata): Promise<Metadata> {
+    const { id } = await params
+    const supabase = await createClient()
+
+    const { data: property } = await supabase
+        .from('properties')
+        .select(`*, property_images(image_url)`)
+        .eq('id', id)
+        .single()
+
+    if (!property) return { title: 'Imóvel não encontrado - Casa Fácil MZ' }
+
+    const firstImage = property.property_images?.[0]?.image_url || ''
+
+    return {
+        title: `${property.title} em ${property.location_district} | Casa Fácil MZ`,
+        description: property.description.substring(0, 160),
+        openGraph: {
+            title: property.title,
+            description: `${property.type === 'sale' ? 'Venda' : 'Aluguel'} - ${property.location_district} - ${formatCurrency(property.price)}`,
+            images: firstImage ? [{ url: firstImage }] : [],
+        },
+    }
+}
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -33,7 +60,8 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     // Define WhatsApp message and links
     const whatsappNumber = '877771719'
     const callNumber = '+258 86 744 3081'
-    const whatsappText = `Olá, vim pelo site Casa Fácil MZ e tenho interesse no imóvel: ${property.title} (${property.location_district})`
+    const propertyUrl = `https://casafacil.co.mz/properties/${property.id}`
+    const whatsappText = `Olá, vim pelo site Casa Fácil MZ e tenho interesse no imóvel: ${property.title} (${property.location_district}).\nVeja o imóvel aqui: ${propertyUrl}`
     const whatsappLink = `https://wa.me/258${whatsappNumber}?text=${encodeURIComponent(whatsappText)}`
 
     return (
@@ -110,6 +138,22 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                             </h2>
                             <div style={{ whiteSpace: 'pre-line', color: 'var(--pk-text-secondary)', lineHeight: 1.8, fontSize: '1.1rem' }}>
                                 {property.description}
+                            </div>
+                        </section>
+
+                        <section style={{ marginBottom: '3rem' }}>
+                            <h2 style={{ fontSize: '1.6rem', marginBottom: '1.5rem', borderBottom: '2px solid var(--pk-surface-100)', paddingBottom: '0.75rem' }}>
+                                Localização: {property.location_district}
+                            </h2>
+                            <div style={{ width: '100%', height: '350px', borderRadius: 'var(--pk-radius-lg)', overflow: 'hidden', border: '1px solid var(--pk-surface-200)', background: 'var(--pk-surface-100)' }}>
+                                <iframe 
+                                    width="100%" 
+                                    height="100%" 
+                                    frameBorder="0" 
+                                    style={{ border: 0 }} 
+                                    src={`https://maps.google.com/maps?q=${encodeURIComponent(property.location_district + ', Tete, Moçambique')}&t=&z=13&ie=UTF8&iwloc=&output=embed`} 
+                                    allowFullScreen
+                                ></iframe>
                             </div>
                         </section>
                     </div>

@@ -57,8 +57,8 @@ export default function Footer() {
                 color: 'rgba(255,255,255,0.5)'
             }}>
                 &copy; {new Date().getFullYear()} Casa Fácil MZ. Todos os direitos reservados.
-                <div style={{ marginTop: '0.5rem' }}>
-                    Desenvolvido com ❤️ para a Província de Tete.
+                <div style={{ marginTop: '0.75rem' }}>
+                    Desenvolvido por <a href="https://www.instagram.com/kaito_luis/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--pk-brand-secondary)', textDecoration: 'none', fontWeight: 700 }}>Kaito Luis</a>
                 </div>
             </div>
         </footer>

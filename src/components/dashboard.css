@@ -48,6 +48,9 @@
     gap: 2rem;
     border-bottom: 1px solid var(--pk-surface-200);
     margin-bottom: 2rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
 }
 
 .tab-btn {
@@ -153,7 +156,8 @@
     border-radius: var(--pk-radius-lg);
     border: 1px solid var(--pk-surface-100);
     box-shadow: var(--pk-shadow-sm);
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .admin-table {
@@ -210,6 +214,11 @@
 .status-sold {
     background: #fef2f2;
     color: #dc2626;
+}
+
+.status-draft {
+    background: #f3f4f6;
+    color: #4b5563;
 }
 
 /* Ranking List */

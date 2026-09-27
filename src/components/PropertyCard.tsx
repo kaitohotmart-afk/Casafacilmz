@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { formatCurrency } from '@/utils/format'
+import { motion } from 'framer-motion'
+import Image from 'next/image'
 
 interface PropertyCardProps {
     property: {
@@ -12,14 +14,21 @@ interface PropertyCardProps {
         type: string
         property_images?: { image_url: string }[]
     }
+    index?: number
 }
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({ property, index = 0 }: PropertyCardProps) {
     const isSale = property.type === 'sale'
     const isLand = property.type === 'land'
 
     return (
-        <Link href={`/properties/${property.id}`} style={{ display: 'block', transition: 'all 0.3s ease' }}>
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: index * 0.1 }}
+            style={{ height: '100%' }}
+        >
+            <Link href={`/properties/${property.id}`} style={{ display: 'block', transition: 'all 0.3s ease', height: '100%' }}>
             <div className="property-card" style={{
                 background: 'white',
                 borderRadius: 'var(--pk-radius-lg)',
@@ -113,5 +122,6 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         }
       `}</style>
         </Link>
+        </motion.div>
     )
 }

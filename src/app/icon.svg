@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="#2563eb" />
+  
+  <!-- House Base -->
+  <path d="M256 120L100 270v150a20 20 0 0020 20h272a20 20 0 0020-20V270L256 120z" fill="white" />
+  
+  <!-- Door -->
+  <path d="M220 440v-110a10 10 0 0110-10h52a10 10 0 0110 10v110" fill="#2563eb" />
+  
+  <!-- Windows -->
+  <path d="M170 300h40v40h-40zM302 300h40v40h-40z" fill="#2563eb" />
+  
+  <!-- Roof Outline -->
+  <path d="M70 280l186-178 186 178" stroke="white" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

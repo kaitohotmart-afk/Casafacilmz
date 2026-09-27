@@ -73,7 +73,7 @@ export default function WelcomeSelector() {
                     </Link>
 
                     {/* Option 2: Announce */}
-                    <Link href="/signup" className="choice-card" style={{
+                    <a href="https://wa.me/258877771719?text=Ol%C3%A1%2C%20gostaria%20de%20divulgar%20meu%20im%C3%B3vel%20no%20site%20Casa%20F%C3%A1cil%20MZ." target="_blank" rel="noopener noreferrer" className="choice-card" style={{
                         background: 'linear-gradient(135deg, var(--pk-brand-primary) 0%, #1e293b 100%)',
                         padding: '3.5rem 2rem',
                         borderRadius: 'var(--pk-radius-2xl)',
@@ -103,9 +103,9 @@ export default function WelcomeSelector() {
                             fontWeight: 700,
                             fontSize: '1.1rem'
                         }}>
-                            Começar Agora
+                            Falar com Administrador
                         </div>
-                    </Link>
+                    </a>
                 </div>
             </div>
 

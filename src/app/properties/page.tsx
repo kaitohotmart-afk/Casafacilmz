@@ -5,9 +5,9 @@ import PropertyCard from '@/components/PropertyCard'
 export default async function PropertiesPage({
     searchParams,
 }: {
-    searchParams: Promise<{ type?: string; district?: string }>
+    searchParams: Promise<{ type?: string; district?: string; maxPrice?: string; minPrice?: string }>
 }) {
-    const { type, district } = await searchParams
+    const { type, district, maxPrice, minPrice } = await searchParams
     const supabase = await createClient()
 
     let query = supabase
@@ -22,6 +22,14 @@ export default async function PropertiesPage({
 
     if (district) {
         query = query.ilike('location_district', `%${district}%`)
+    }
+
+    if (minPrice) {
+        query = query.gte('price', parseInt(minPrice))
+    }
+
+    if (maxPrice) {
+        query = query.lte('price', parseInt(maxPrice))
     }
 
     const { data: properties } = await query

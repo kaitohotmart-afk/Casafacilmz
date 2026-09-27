@@ -22,21 +22,15 @@ export default function Navbar() {
                     Casa Fácil <span style={{ color: 'var(--pk-brand-secondary)' }}>MZ</span>
                 </Link>
 
-                {/* Mobile Quick Actions */}
                 <div className="mobile-actions" style={{ display: 'none', gap: '0.5rem', marginLeft: 'auto', marginRight: '0.5rem' }}>
-                    <Link href="/login" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--pk-brand-primary)', border: '1px solid var(--pk-brand-primary)', padding: '0.4rem 0.75rem', borderRadius: 'var(--pk-radius-sm)' }}>
-                        Entrar
-                    </Link>
-                    <Link href="/signup" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white', background: 'var(--pk-brand-primary)', padding: '0.4rem 0.75rem', borderRadius: 'var(--pk-radius-sm)' }}>
-                        Registar
-                    </Link>
                 </div>
 
                 {/* Desktop Menu */}
                 <div className="desktop-menu" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                    <Link href="/blog" style={{ fontWeight: 500, fontSize: '0.95rem', color: pathname === '/blog' ? 'var(--pk-brand-secondary)' : 'var(--pk-text-secondary)' }}>Dicas</Link>
                     <Link href="/about" style={{ fontWeight: 500, fontSize: '0.95rem', color: pathname === '/about' ? 'var(--pk-brand-secondary)' : 'var(--pk-text-secondary)' }}>Sobre</Link>
                     <Link href="/contact" style={{ fontWeight: 500, fontSize: '0.95rem', color: pathname === '/contact' ? 'var(--pk-brand-secondary)' : 'var(--pk-text-secondary)' }}>Contacto</Link>
-                    <Link href="/signup" style={{
+                    <a href="https://wa.me/258877771719?text=Ol%C3%A1%2C%20gostaria%20de%20divulgar%20meu%20im%C3%B3vel%20no%20site%20Casa%20F%C3%A1cil%20MZ." target="_blank" rel="noopener noreferrer" style={{
                         fontWeight: 600,
                         fontSize: '0.95rem',
                         color: 'var(--pk-text-primary)',
@@ -45,10 +39,7 @@ export default function Navbar() {
                         borderRadius: 'var(--pk-radius-sm)'
                     }}>
                         Divulgue seu Imóvel
-                    </Link>
-                    <Link href="/login" className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}>
-                        Entrar
-                    </Link>
+                    </a>
                 </div>
 
                 {/* Mobile Toggle */}
@@ -83,10 +74,10 @@ export default function Navbar() {
                     right: 0,
                     boxShadow: 'var(--pk-shadow-lg)'
                 }}>
+                    <Link href="/blog" onClick={() => setIsOpen(false)} style={{ color: 'var(--pk-text-primary)', fontWeight: 500 }}>Dicas</Link>
                     <Link href="/about" onClick={() => setIsOpen(false)} style={{ color: 'var(--pk-text-primary)', fontWeight: 500 }}>Sobre</Link>
                     <Link href="/contact" onClick={() => setIsOpen(false)} style={{ color: 'var(--pk-text-primary)', fontWeight: 500 }}>Contacto</Link>
-                    <Link href="/signup" onClick={() => setIsOpen(false)} style={{ color: 'var(--pk-text-primary)', fontWeight: 500 }}>Divulgue seu Imóvel</Link>
-                    <Link href="/login" onClick={() => setIsOpen(false)} className="btn btn-primary">Entrar</Link>
+                    <a href="https://wa.me/258877771719?text=Ol%C3%A1%2C%20gostaria%20de%20divulgar%20meu%20im%C3%B3vel%20no%20site%20Casa%20F%C3%A1cil%20MZ." target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} style={{ color: 'var(--pk-text-primary)', fontWeight: 500 }}>Divulgue seu Imóvel</a>
                 </div>
             )}
 
