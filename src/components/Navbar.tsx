@@ -31,14 +31,16 @@ export default function Navbar() {
                     <Link href="/about" style={{ fontWeight: 500, fontSize: '0.95rem', color: pathname === '/about' ? 'var(--pk-brand-secondary)' : 'var(--pk-text-secondary)' }}>Sobre</Link>
                     <Link href="/contact" style={{ fontWeight: 500, fontSize: '0.95rem', color: pathname === '/contact' ? 'var(--pk-brand-secondary)' : 'var(--pk-text-secondary)' }}>Contacto</Link>
                     <a href="https://wa.me/258877771719?text=Ol%C3%A1%2C%20gostaria%20de%20divulgar%20meu%20im%C3%B3vel%20no%20site%20Casa%20F%C3%A1cil%20MZ." target="_blank" rel="noopener noreferrer" style={{
-                        fontWeight: 600,
+                        fontWeight: 700,
                         fontSize: '0.95rem',
-                        color: 'var(--pk-text-primary)',
-                        background: 'var(--pk-surface-100)',
-                        padding: '0.5rem 1rem',
-                        borderRadius: 'var(--pk-radius-sm)'
+                        color: 'white',
+                        background: 'var(--pk-brand-secondary)',
+                        padding: '0.6rem 1.2rem',
+                        borderRadius: 'var(--pk-radius-md)',
+                        boxShadow: '0 4px 10px rgba(234, 88, 12, 0.3)',
+                        transition: 'all 0.2s ease',
                     }}>
-                        Divulgue seu Imóvel
+                        Divulgar Casa
                     </a>
                 </div>
 
@@ -77,7 +79,7 @@ export default function Navbar() {
                     <Link href="/blog" onClick={() => setIsOpen(false)} style={{ color: 'var(--pk-text-primary)', fontWeight: 500 }}>Dicas</Link>
                     <Link href="/about" onClick={() => setIsOpen(false)} style={{ color: 'var(--pk-text-primary)', fontWeight: 500 }}>Sobre</Link>
                     <Link href="/contact" onClick={() => setIsOpen(false)} style={{ color: 'var(--pk-text-primary)', fontWeight: 500 }}>Contacto</Link>
-                    <a href="https://wa.me/258877771719?text=Ol%C3%A1%2C%20gostaria%20de%20divulgar%20meu%20im%C3%B3vel%20no%20site%20Casa%20F%C3%A1cil%20MZ." target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} style={{ color: 'var(--pk-text-primary)', fontWeight: 500 }}>Divulgue seu Imóvel</a>
+                    <a href="https://wa.me/258877771719?text=Ol%C3%A1%2C%20gostaria%20de%20divulgar%20meu%20im%C3%B3vel%20no%20site%20Casa%20F%C3%A1cil%20MZ." target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} style={{ color: 'white', background: 'var(--pk-brand-secondary)', padding: '1rem', textAlign: 'center', borderRadius: 'var(--pk-radius-md)', fontWeight: 700, boxShadow: '0 4px 10px rgba(234, 88, 12, 0.3)' }}>Divulgar Casa</a>
                 </div>
             )}
 

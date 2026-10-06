@@ -39,20 +39,7 @@
   --pk-section-gap: 5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pk-brand-primary: #1E293B;
-    --pk-brand-primary-hover: #334155;
-    --pk-surface-white: #0F172A;
-    --pk-surface-050: #020617;
-    --pk-surface-100: #1E293B;
-    --pk-surface-200: #334155;
-    --pk-surface-300: #475569;
-    --pk-text-primary: #F8FAFC;
-    --pk-text-secondary: #CBD5E1;
-    --pk-text-tertiary: #94A3B8;
-  }
-}
+
 * {
   box-sizing: border-box;
   padding: 0;

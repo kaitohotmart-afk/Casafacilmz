@@ -58,8 +58,8 @@ export default async function Home() {
               fontWeight: 800,
               textShadow: '0 4px 15px rgba(0,0,0,1), 0 2px 5px rgba(0,0,0,0.8)'
             }}>
-              Seu novo lar em <br />
-              <span style={{ color: 'var(--pk-brand-secondary)' }}>Tete</span> está aqui.
+              Encontre imóvel em <br />
+              <span style={{ color: 'var(--pk-brand-secondary)' }}>Tete:</span> comprar, alugar, terreno
             </h1>
             <p style={{
               fontSize: '1.3rem',
